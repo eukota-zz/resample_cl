@@ -12,4 +12,8 @@ public:
 	std::map<int, ProblemGroup*> GroupFactory();
 };
 
-int exCL_ProgressiveArraySum(ResultsStruct* results);
+int exCL_Resample(ResultsStruct* results);
+int exSeq_Resample(ResultsStruct* results);
+
+int exCL_QRD(ResultsStruct* results);
+int exSeq_QRD(ResultsStruct* results);

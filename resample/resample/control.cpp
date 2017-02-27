@@ -30,22 +30,24 @@ std::map<int, ProblemGroup*> ControlClass::GroupFactory()
 	pgs[InputControl->GroupNum()] = InputControl;
 
 	ProblemGroup* projectFuncs = new ProblemGroup(1, "Control");
-	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&exCL_ProgressiveArraySum, "Progressive Array Sum: OpenCL");
+	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&exCL_Resample, "OpenCL: Apply sixth-order polynomial");
+	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&exSeq_Resample, "Sequental: Apply sixth-order polynomial");
 	pgs[projectFuncs->GroupNum()] = projectFuncs;
 	return pgs;
 }
 
-////////////////// PROGRESSIVE ARRAY SUM /////////////////
-int exCL_ProgressiveArraySum(ResultsStruct* results)
+
+
+////////////////// RESAMPLE USING POLYNOMIAL APPROXIMATION /////////////////
+int exCL_Resample(ResultsStruct* results)
 {
 	cl_int err;
 	ocl_args ocl(CL_DEVICE_TYPE_GPU);
 
 	// Create Local Variables and Allocate Memory
 	// The buffer should be aligned with 4K page and size should fit 64-byte cached line
-	cl_uint arrayWidth = 1024;
-	cl_uint arrayHeight = 1;
-	cl_uint optimizedSizeFloat = ((sizeof(cl_float) * arrayWidth * arrayHeight - 1) / 64 + 1) * 64;
+	cl_uint sampleSize = 1024;
+	cl_uint optimizedSizeFloat = ((sizeof(cl_float) * sampleSize - 1) / 64 + 1) * 64;
 	cl_float* inputA = (cl_float*)_aligned_malloc(optimizedSizeFloat, 4096);
 	cl_float* outputC = (cl_float*)_aligned_malloc(optimizedSizeFloat, 4096);
 	if (NULL == inputA || NULL == outputC)
@@ -54,14 +56,15 @@ int exCL_ProgressiveArraySum(ResultsStruct* results)
 		return -1;
 	}
 	// Generate Random Input
-	data::generateInputCLSeq(inputA, arrayWidth, 1);
+	data::generateInputCLSeq(inputA, sampleSize, 1);
 
 	// Create OpenCL buffers from host memory for use by Kernel
+	cl_float8        coeffs = {1,2,3,4,5,6,7,0};
 	cl_mem           srcA;              // hold first source buffer
 	cl_mem           dstMem;            // hold destination buffer
-	if (CL_SUCCESS != CreateReadBufferArg(&ocl.context, &srcA, inputA, arrayWidth, 1))
+	if (CL_SUCCESS != CreateReadBufferArg(&ocl.context, &srcA, inputA, sampleSize, 1))
 		return -1;
-	if (CL_SUCCESS != CreateReadBufferArg(&ocl.context, &dstMem, outputC, arrayWidth, 1))
+	if (CL_SUCCESS != CreateWriteBufferArg(&ocl.context, &dstMem, outputC, sampleSize, 1))
 		return -1;
 
 	// Create and build the OpenCL program - imports named cl file.
@@ -69,7 +72,7 @@ int exCL_ProgressiveArraySum(ResultsStruct* results)
 		return -1;
 
 	// Create Kernel - kernel name must match kernel name in cl file
-	ocl.kernel = clCreateKernel(ocl.program, "progressiveArraySum", &err);
+	ocl.kernel = clCreateKernel(ocl.program, "Resample", &err);
 	if (CL_SUCCESS != err)
 	{
 		LogError("Error: clCreateKernel returned %s\n", TranslateOpenCLError(err));
@@ -77,18 +80,19 @@ int exCL_ProgressiveArraySum(ResultsStruct* results)
 	}
 
 	// Set OpenCL Kernel Arguments - Order Indicated by Final Argument
-	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &srcA, 0))
+	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &coeffs, 0))
 		return -1;
-	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &dstMem, 1))
+	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &srcA, 1))
+		return -1;
+	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &dstMem, 2))
 		return -1;
 
 	// Enqueue Kernel (wrapped in profiler timing)
 	ProfilerStruct profiler;
 	profiler.Start();
-	size_t globalWorkSize[1] = { arrayWidth };
+	size_t globalWorkSize[1] = { sampleSize };
 	// hard code work group size after finding optimal solution with KDF Sessions
-	// progressive array sum: {64}
-	size_t localWorkSize[1] = { 64 };
+	size_t localWorkSize[1] = { 16 };
 	if (CL_SUCCESS != ocl.ExecuteKernel(globalWorkSize, 1, localWorkSize))
 		return -1;
 	profiler.Stop();
@@ -98,7 +102,7 @@ int exCL_ProgressiveArraySum(ResultsStruct* results)
 	{
 		// Map Host Buffer to Local Data
 		cl_float* resultPtr = NULL;
-		if (CL_SUCCESS != MapHostBufferToLocal(&ocl.commandQueue, &dstMem, arrayWidth, 1, &resultPtr))
+		if (CL_SUCCESS != MapHostBufferToLocal(&ocl.commandQueue, &dstMem, sampleSize, 1, &resultPtr))
 		{
 			LogError("Error: clEnqueueMapBuffer failed.\n");
 			return -1;
@@ -108,8 +112,10 @@ int exCL_ProgressiveArraySum(ResultsStruct* results)
 		// We mapped dstMem to resultPtr, so resultPtr is ready and includes the kernel output !!!
 		// Verify the results
 		bool failed = false;
+		/// @TODO WRITE SEQUENTIAL VERIFICATION CODE
+		/*
 		float cumSum = 0.0;
-		for (size_t i = 0; i < arrayWidth; ++i)
+		for (size_t i = 0; i < sampleSize; ++i)
 		{
 			cumSum += inputA[i];
 			if (resultPtr[i] != cumSum)
@@ -118,6 +124,7 @@ int exCL_ProgressiveArraySum(ResultsStruct* results)
 				failed = true;
 			}
 		}
+		*/
 		if (!failed)
 			LogInfo("Verification passed.\n");
 
@@ -138,5 +145,22 @@ int exCL_ProgressiveArraySum(ResultsStruct* results)
 	results->HasWindowsRunTime = true;
 	results->OpenCLRunTime = ocl.RunTimeMS();
 	results->HasOpenCLRunTime = true;
+	return 0;
+}
+
+int exSeq_Resample(ResultsStruct* results)
+{
+	return 0;
+}
+
+
+////////////////// QR DECOMPOSITION ///////////////
+int exCL_QRD(ResultsStruct* results)
+{
+	return 0;
+}
+
+int exSeq_QRD(ResultsStruct* results)
+{
 	return 0;
 }

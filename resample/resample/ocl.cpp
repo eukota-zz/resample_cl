@@ -422,6 +422,14 @@ cl_uint ocl_args::UpdateProfiler()
 	return CL_SUCCESS;
 }
 
+cl_uint SetKernelArgument(cl_kernel* kernel, cl_float8* mem, unsigned int argNum)
+{
+	cl_int err = clSetKernelArg(*kernel, argNum, sizeof(cl_float8), (void *)mem);
+	if (CL_SUCCESS != err)
+		LogError("error: Failed to set argument %d, returned %s\n", argNum, TranslateOpenCLError(err));
+	return err;
+}
+
 cl_uint SetKernelArgument(cl_kernel* kernel, cl_uint* mem, unsigned int argNum)
 {
 	cl_int err = clSetKernelArg(*kernel, argNum, sizeof(cl_uint), (void *)mem);
