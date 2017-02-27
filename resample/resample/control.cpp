@@ -161,9 +161,8 @@ int exCL_QRD(ResultsStruct* results)
 }
 
 /*
-* This function Converts a matrix A into an upper right triangular
-* matrix R using Givens Rotations
-*/
+ * Sequential QR decomposition function
+ */
 void QR(cl_float* R, cl_float* Q, cl_uint arrayWidth, cl_uint arrayHeight)
 {
 	cl_float a;
