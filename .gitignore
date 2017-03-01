@@ -309,3 +309,12 @@ __pycache__/
 sessions/resample/LastRunReport/
 sessions/resample/LastRunResults/
 sessions/resample/bin_*.bin
+sessions/resample/**/resources/
+sessions/resample/**/external/*
+sessions/resample/**/data/
+sessions/**/execution/
+**/octave-workspace
+sessions/**/*.html
+sessions/**/css/*
+sessions/**/*.js
+sessions/**/*.execution
