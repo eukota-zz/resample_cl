@@ -4,8 +4,13 @@
   function [out] = backSub(R, Qtb)
     [rows,cols] = size(R);
     out = zeros(cols,1);
-    for m=cols:-1:1
-      out(m)=(Qtb(m)-R(m,:)*out)/R(m,m);
+    % do last value without any subtraction
+    out(cols) = Qtb(cols)/R(cols,cols);
+    for m=cols-1:-1:1
+      % only perform products for known non-zero quantities
+      from = m+1;
+      to = cols;
+      out(m)=(Qtb(m)-R(m,from:to)*out(from:to))/R(m,m);
     endfor
     
     
