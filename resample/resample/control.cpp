@@ -32,6 +32,7 @@ std::map<int, ProblemGroup*> ControlClass::GroupFactory()
 	ProblemGroup* projectFuncs = new ProblemGroup(1, "Control");
 	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&exCL_Resample, "OpenCL: Apply sixth-order polynomial");
 	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&exSeq_Resample, "Sequental: Apply sixth-order polynomial");
+	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&exSeq_QRD, "Sequental: QRD");
 	pgs[projectFuncs->GroupNum()] = projectFuncs;
 	return pgs;
 }
@@ -210,6 +211,14 @@ void QR(cl_float* R, cl_float* Q, cl_uint arrayWidth, cl_uint arrayHeight)
 		}
 	}
 
+}
+
+/// @TODO move primary code to helper function
+/// @todo write a test function which uses width of 7 with correct 1, t, t^2, t^3 calculations, then
+/// have it use a height of the SAMPLE_SIZE
+int helper_exSeq_QRD(ResultsStruct* results)
+{
+	return -1;
 }
 
 int exSeq_QRD(ResultsStruct* results)
