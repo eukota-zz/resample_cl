@@ -77,6 +77,8 @@ int ControlClass::LoadSampleData(bool printPoints)
 
 	return points.size();
 }
+
+// Set the Input and Output sample rates
 int SetSampleRates(ResultsStruct* results)
 {
 	std::cout << "Enter INPUT sample rate (currently " << ControlObject->sample_rate_input_ << "): ";
@@ -85,6 +87,8 @@ int SetSampleRates(ResultsStruct* results)
 	std::cin >> ControlObject->sample_rate_output_;
 	return 0;
 }
+
+// Set Input Data File path
 int SetInputDataFile(ResultsStruct* results)
 {
 	std::cout << "Enter path to input sample file to (currently " << ControlObject->sample_data_input_file_ << "): ";
@@ -97,11 +101,11 @@ int SetInputDataFile(ResultsStruct* results)
 		std::cout << "WARNING: File does not exist: " << ControlObject->sample_data_input_file_ << std::endl;
 		return -1;
 	}
-
 	return 0;
 }
 
 // Reads sample data and prints it to the screen
+// Uses LoadSampleData() function with optional print bool set to true
 int readSampleDataTest(ResultsStruct* results)
 {
 	// returns number of loaded

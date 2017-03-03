@@ -1,5 +1,6 @@
 #include "sequential.h"
 #include "utils.h"
+#include "stdlib.h"
 #include "control.h"
 #include "profiler.h"
 #include "groups.h"
@@ -120,7 +121,37 @@ int exSeq_QRD(ResultsStruct* results)
 	return 0;
 }
 
-int exSeq_BackSub(ResultsStruct* results)
+// Solves for coefficients in equation R*x=Q*b where
+// R and Q are from QR Decomposition
+// x is desired coefficients
+// b is column vector of sampled data
+// @param[in] R upper triangular matrix from QR Decomposition
+// @param[in] Qtb Q*b column vector
+// @param[in] rows number of sample data points
+// @param[in] cols number of coefficients to solve for
+// @param[out] Result is where x is stored
+void BackSub(cl_float* R, cl_float* Qtb, cl_uint rows, cl_uint cols, cl_float* Result)
+{
+	if (!Result)
+		Result = (cl_float*)malloc(sizeof(cl_float*)*rows);
+
+	// solve for last last value without any subtraction
+	Result[cols] = Qtb[cols] / R[cols][cols];
+	for (size_t i = cols - 1; i > 1; i--)
+	{
+		size_t from = i + 1;
+		size_t to = cols;
+		
+		cl_float subtractSum = 0;
+		for (int j = from; j < to; j++)
+			subtractSum += R[i][j] * Result[j];
+
+		Result[i] = (Qtb[i] - subtractSum);
+	}
+}
+
+// Tests BackSub
+int Test_BackSub(ResultsStruct* results)
 {
 	// get R matrix
 	// get column vector product of Q matrix and b column vector
