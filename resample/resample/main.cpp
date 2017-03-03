@@ -33,7 +33,6 @@ void PrintInstructions()
 int _tmain(int argc, TCHAR* argv[])
 {
 	srand(12345);
-	bool runTests = false;
 	string input;
 	do
 	{
@@ -42,8 +41,9 @@ int _tmain(int argc, TCHAR* argv[])
 		cin >> input;
 		if (input == "P")
 		{
-			ControlClass resampleControl;
-			res = resampleControl.Run();
+			ControlObject = new ControlClass();
+			res = ControlObject->Run();
+			delete ControlObject;
 		}
 		if (input == "Q" || input == "q")
 		{
