@@ -19,6 +19,10 @@ public:
 	int sample_rate_input_;
 	int sample_rate_output_;
 	std::string sample_data_input_file_;
+
+	// QRD
+	int* Q;
+	int* R;
 };
 extern ControlClass* ControlObject;
 
@@ -27,9 +31,3 @@ int SetInputDataFile(ResultsStruct* results);
 int readSampleDataTest(ResultsStruct* results);
 
 
-
-int exCL_Resample(ResultsStruct* results);
-int exSeq_Resample(ResultsStruct* results);
-
-int exCL_QRD(ResultsStruct* results);
-int exSeq_QRD(ResultsStruct* results);

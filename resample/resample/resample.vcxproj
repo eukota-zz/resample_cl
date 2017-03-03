@@ -185,7 +185,9 @@
     <ClCompile Include="groups.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ocl.cpp" />
+    <ClCompile Include="parallel.cpp" />
     <ClCompile Include="profiler.cpp" />
+    <ClCompile Include="sequential.cpp" />
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
@@ -195,7 +197,9 @@
     <ClInclude Include="enums.h" />
     <ClInclude Include="groups.h" />
     <ClInclude Include="ocl.h" />
+    <ClInclude Include="parallel.h" />
     <ClInclude Include="profiler.h" />
+    <ClInclude Include="sequential.h" />
     <ClInclude Include="tools.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>
