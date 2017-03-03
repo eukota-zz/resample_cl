@@ -24,6 +24,7 @@ ControlClass::ControlClass()
 	, sample_data_(NULL)
 	, sample_rate_input_(1000)
 	, sample_rate_output_(500)
+	, sample_data_input_file_("..\\data\\default.csv")
 {
 	groups_ = GroupFactory();
 }

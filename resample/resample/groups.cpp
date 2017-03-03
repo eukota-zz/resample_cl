@@ -13,9 +13,6 @@ bool PRINT_TO_FILE = false;
 std::string RESULTS_FILE = "results.txt";
 unsigned int RUN_COUNT = 1;
 float MIN_DIFF = (float)0.001;
-int SAMPLE_RATE_INPUT = 1000; // 1000 samples per second 
-int SAMPLE_RATE_OUTPUT = 500; 
-std::string SAMPLE_DATA_INPUT_FILE = "sample_data_input.txt";
 
 
 ResultsStruct::ResultsStruct()
