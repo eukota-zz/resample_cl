@@ -10,15 +10,17 @@ x = [1,2,3,4];
 y = [6,5,7,10];
 k = 2;
 
-a = polyLsqr(x, y, k);
+% todo: (x) function to take sampleRate and numPoints - should return vector of time points
+% todo: (y) function generating sample data - should return vector of sample amplitudes
 
-fit = zeros(1,numel(x));
-for i=0:k
-   fit = fit + a(i+1) .* x.^i;
-end
+coeffs = polyLsqr(x, y, k);
+sampleRate = 1;
+order = k;
+numPoints = numel(x);
+polyEval(coeffs,sampleRate,order,numPoints)
 
 figure
 plot(x,y,'o',x,fit,'.-')
 legend('data','polynomial fit')
 
-a
+coeffs

@@ -2,7 +2,7 @@
 % x = time vector
 % y = amplitude vector
 % k = polynomial order
-function a = polyLsqr(x, y, k)
+function coeffs = polyLsqr(x, y, k)
   % Construct x matrix
   X = zeros(numel(x),k+1);
   for i=1:numel(x)
@@ -14,5 +14,6 @@ function a = polyLsqr(x, y, k)
         end
      end
   end
-  a = inv(X' * X) * X' * y';
+  [Q,R] = qrd(X);
+  coeffs = backSub(R, Q' * y');  
 endfunction
