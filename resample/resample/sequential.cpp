@@ -127,26 +127,27 @@ int exSeq_QRD(ResultsStruct* results)
 // b is column vector of sampled data
 // @param[in] R upper triangular matrix from QR Decomposition
 // @param[in] Qtb Q*b column vector
-// @param[in] rows number of sample data points
-// @param[in] cols number of coefficients to solve for
+// @param[in] dim number of coefficients to solve for (R is square, so we only need one parameter for the matrix dimension).
 // @param[out] Result is where x is stored
-void BackSub(cl_float* R, cl_float* Qtb, cl_uint rows, cl_uint cols, cl_float* Result)
+void BackSub(cl_float* R, cl_float* Qtb, int dim, cl_float* Result)
 {
 	if (!Result)
-		Result = (cl_float*)malloc(sizeof(cl_float*)*rows);
+		Result = (cl_float*)malloc(sizeof(cl_float*)*dim);
 
 	// solve for last last value without any subtraction
-	Result[cols] = Qtb[cols] / R[cols][cols];
-	for (size_t i = cols - 1; i > 1; i--)
+	Result[dim - 1] = Qtb[dim - 1] / R[dim*dim - 1];
+	int count = dim - 2;
+	for (int i = dim - 2; i >= 0; i--)
 	{
-		size_t from = i + 1;
-		size_t to = cols;
-		
-		cl_float subtractSum = 0;
-		for (int j = from; j < to; j++)
-			subtractSum += R[i][j] * Result[j];
+		int from = i + 1;
+		int to = dim;
 
-		Result[i] = (Qtb[i] - subtractSum);
+		float subtractSum = 0;
+		for (int j = from; j < to; j++)
+			subtractSum += R[i*dim + j] * Result[j];
+
+		Result[i] = (Qtb[i] - subtractSum) / R[i*dim + count];
+		count -= 1;
 	}
 }
 
