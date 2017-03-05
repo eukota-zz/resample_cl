@@ -131,6 +131,9 @@ int exSeq_QRD(ResultsStruct* results)
 // @param[out] Result is where x is stored
 void BackSub(cl_float* R, cl_float* Qtb, size_t Dim, cl_float* Result)
 {
+	if (!R || !Qtb || Dim == 0)
+		return;
+
 	// Start at the Nth row in the right-triangular matrix R where we effectively have R[n][n] * x[n] = Qtb[n]
 	// Work our way up solving for each x[n] value in reverse, allowing us to solve for each row as we work our way up
 	for (size_t resultIdx = Dim - 1; resultIdx >= 0; --resultIdx)
