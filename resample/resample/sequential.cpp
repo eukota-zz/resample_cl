@@ -125,29 +125,26 @@ int exSeq_QRD(ResultsStruct* results)
 // R and Q are from QR Decomposition
 // x is desired coefficients
 // b is column vector of sampled data
-// @param[in] R upper triangular matrix from QR Decomposition
-// @param[in] Qtb Q*b column vector
-// @param[in] dim number of coefficients to solve for (R is square, so we only need one parameter for the matrix dimension).
+// @param[in] R upper triangular matrix of size MxN (from QR Decomposition)
+// @param[in] Qtb Q*b column vector of size Mx1
+// @param[in] Dim coefficients to solve for - should match N columns size of R
 // @param[out] Result is where x is stored
-void BackSub(cl_float* R, cl_float* Qtb, int dim, cl_float* Result)
+void BackSub(cl_float* R, cl_float* Qtb, size_t Dim, cl_float* Result)
 {
-	if (!Result)
-		Result = (cl_float*)malloc(sizeof(cl_float*)*dim);
-
-	// solve for last last value without any subtraction
-	Result[dim - 1] = Qtb[dim - 1] / R[dim*dim - 1];
-	int count = dim - 2;
-	for (int i = dim - 2; i >= 0; i--)
+	// Start at the Nth row in the right-triangular matrix R where we effectively have R[n][n] * x[n] = Qtb[n]
+	// Work our way up solving for each x[n] value in reverse, allowing us to solve for each row as we work our way up
+	for (size_t resultIdx = Dim - 1; resultIdx >= 0; --resultIdx)
 	{
-		int from = i + 1;
-		int to = dim;
+		const size_t RRowStartIdx = resultIdx*Dim; // since R is indexed as an array instead of a matrix
 
-		float subtractSum = 0;
-		for (int j = from; j < to; j++)
-			subtractSum += R[i*dim + j] * Result[j];
+		// sum up product of remaining row of R with known x values
+		cl_float subtractSum = 0;
+		for (size_t sumIdx = resultIdx + 1; sumIdx < Dim; sumIdx++)
+			subtractSum += R[RRowStartIdx + sumIdx] * Result[sumIdx];
 
-		Result[i] = (Qtb[i] - subtractSum) / R[i*dim + count];
-		count -= 1;
+		// calculate final result eg: if ax + b = c, then x = (c-b)/a
+		if(Result)
+			Result[resultIdx] = (Qtb[resultIdx] - subtractSum) / R[RRowStartIdx + resultIdx];
 	}
 }
 

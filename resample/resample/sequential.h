@@ -5,7 +5,7 @@
 struct ResultsStruct;
 
 // Back Substitution
-void BackSub(cl_float* R, cl_float* Qtb, cl_uint rows, cl_uint cols, cl_float* Result);
+void BackSub(cl_float* R, cl_float* Qtb, size_t Dim, cl_float* Result);
 int Test_BackSub(ResultsStruct* results);
 
 // Sequential
