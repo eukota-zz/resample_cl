@@ -94,10 +94,13 @@ int Test_QR(ResultsStruct* results)
 
 	std::cout << std::endl;
 	std::cout << "Q: " << std::endl;
-	tools::printMatrix<float>(Q, arrayHeight, arrayHeight);
+	float* Qtmp = (float*)malloc(sizeof(float)*arrayHeight*arrayHeight);
+	tools::TransposeMatrix(Q, arrayHeight, arrayHeight, Qtmp);
+	tools::printMatrix<float>(Qtmp, arrayHeight, arrayHeight);
 
 	free(A);
 	free(Q);
+	free(Qtmp);
 
 	results->WindowsRunTime = (double)runTime;
 	results->HasWindowsRunTime = true;
