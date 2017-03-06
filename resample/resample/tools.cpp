@@ -32,6 +32,22 @@ namespace tools
 		return v;
 	}
 
+	void CreateIdentityMatrix(size_t size, float* output)
+	{
+		if (!output)
+			return;
+
+		for (size_t i = 0; i < size; ++i)
+		{
+			for (size_t j = 0; j < size; ++j)
+			{
+				if (i == j)
+					output[i*size + j] = 1.0f;
+				else
+					output[i*size + j] = 0.0f;
+			}
+		}
+	}
 
 	// Fills output with an array of values from start to end (inclusive) stepping by step
 	// @param[in] start value to start at
@@ -43,7 +59,7 @@ namespace tools
 		if (stepVal <= 0 || start-end < stepVal)
 			return NULL;
 
-		const size_t sampleCount = ((end - start) / stepVal);
+		const size_t sampleCount = (size_t)((end - start) / stepVal);
 		return IncrementalArrayGenerator_BySize(start, stepVal, sampleCount);
 	}
 	float* IncrementalArrayGenerator_BySize(float start, float stepVal, size_t sampleCount)

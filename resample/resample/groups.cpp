@@ -132,7 +132,7 @@ void GroupManager::PrintGroupMenu()
 	std::cout << "Group: " << GroupName.c_str() << std::endl;
 	for (std::map<int, ProblemGroup*>::const_iterator i = groups_.begin(), e = groups_.end(); i != e; ++i)
 	{
-		for (std::map<int, Problem*>::const_iterator g = i->second->problems_.begin(), h = i->second->problems_.end(); h != g; ++g)
+		for (std::map<size_t, Problem*>::const_iterator g = i->second->problems_.begin(), h = i->second->problems_.end(); h != g; ++g)
 		{
 			std::cout << i->first << "." << g->first << ": " << g->second->Annotation().c_str() << std::endl;
 		}

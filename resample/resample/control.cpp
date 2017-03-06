@@ -31,17 +31,18 @@ std::map<int, ProblemGroup*> ControlClass::GroupFactory()
 	std::map<int, ProblemGroup*> pgs;
 
 	ProblemGroup* InputControl = GroupManagerInputControlFactory();
-	InputControl->problems_[InputControl->problems_.size() + 1] = new Problem(&SetInputDataFile, "Set the file path to read sample data from.");
-	InputControl->problems_[InputControl->problems_.size() + 1] = new Problem(&SetSampleRates, "Set the input and output sample rates.");
-	InputControl->problems_[InputControl->problems_.size() + 1] = new Problem(&Test_LoadSampleData, "Read and print sample data.");
+	size_t idx = InputControl->problems_.size();
+	InputControl->problems_[++idx] = new Problem(&SetInputDataFile, "Set the file path to read sample data from.");
+	InputControl->problems_[++idx] = new Problem(&SetSampleRates, "Set the input and output sample rates.");
+	InputControl->problems_[++idx] = new Problem(&Test_LoadSampleData, "Read and print sample data.");
 	pgs[InputControl->GroupNum()] = InputControl;
 
 	ProblemGroup* projectFuncs = new ProblemGroup(1, "Control");
-	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&exCL_Resample, "OpenCL: Apply sixth-order polynomial");
-	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&Test_PolyEval, "Test Polynomial Evaluation Function");
-	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&Test_QR, "Test QR Decomposition Function");
-	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&Test_BackSub, "Test Back Substitution Function");
-	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&Test_SignalGenerator, "Test Signal Generator Function");
+	projectFuncs->problems_[++idx] = new Problem(&exCL_Resample, "OpenCL: Apply sixth-order polynomial");
+	projectFuncs->problems_[++idx] = new Problem(&Test_PolyEval, "Test Polynomial Evaluation Function");
+	projectFuncs->problems_[++idx] = new Problem(&Test_QR, "Test QR Decomposition Function");
+	projectFuncs->problems_[++idx] = new Problem(&Test_BackSub, "Test Back Substitution Function");
+	projectFuncs->problems_[++idx] = new Problem(&Test_SignalGenerator, "Test Signal Generator Function");
 	pgs[projectFuncs->GroupNum()] = projectFuncs;
 	return pgs;
 }
@@ -77,7 +78,7 @@ int ControlClass::LoadSampleData(bool printPoints)
 			std::cout << i << ": " << points[i] << std::endl;
 	}
 
-	return points.size();
+	return (int)points.size();
 }
 
 // Set the Input and Output sample rates
@@ -112,7 +113,7 @@ int Test_LoadSampleData(ResultsStruct* results)
 {
 	// returns number of loaded
 	bool printPoints = true; // for test purposes
-	int loadCount = ControlObject->LoadSampleData(printPoints);
+	size_t loadCount = ControlObject->LoadSampleData(printPoints);
 	std::cout << "Points Loaded: " << loadCount << std::endl;
 	return (loadCount >= 0 ? 0 : -1);
 }

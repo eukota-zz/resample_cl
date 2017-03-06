@@ -48,7 +48,7 @@ public:
 	ProblemGroup(int groupNum, const std::string& annotation) : problem_group_num_(groupNum), problem_group_annotation_(annotation) {}
 	int operator()(int problem);
 
-	std::map<int, Problem*> problems_;
+	std::map<size_t, Problem*> problems_;
 	int GroupNum() { return problem_group_num_; }
 
 	std::string Annotation() { return problem_group_annotation_; }

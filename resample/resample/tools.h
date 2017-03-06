@@ -33,6 +33,29 @@ namespace tools
 		std::cout << " }";
 	};
 
+	// Print a matrix to std::cout
+	// @param[in] M matrix to print
+	// @param[in] rows number of rows (height) 
+	// @param[in] cols number of cols (width)
+	template<class T>
+	void printMatrix(T* M, size_t rows, size_t cols)
+	{
+		if (!M)
+			return;
+
+		for (size_t i = 0; i < rows; ++i)
+		{
+			std::cout << "[ ";
+			for (size_t j = 0; j < cols; ++j)
+			{
+				std::cout << M[i*cols + j];
+				if (j + 1 < cols)
+					std::cout << ", ";
+			}
+			std::cout << " ]" << std::endl;
+		}
+	};
+
 	// Verify that two arrays are equivalent
 	// @param[in] a left input array
 	// @param[in] b right input array
@@ -50,6 +73,8 @@ namespace tools
 		}
 		return true;
 	}
+
+	void CreateIdentityMatrix(size_t size, float* output);
 
 	float* IncrementalArrayGenerator_ByStep(float start, float end, float stepVal);
 	float* IncrementalArrayGenerator_BySize(float start, float stepVal, size_t sampleCount);

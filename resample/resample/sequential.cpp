@@ -19,9 +19,9 @@ void QR(cl_float* R, cl_float* Q, cl_uint arrayWidth, cl_uint arrayHeight)
 	cl_float Rnew2[2048];
 	cl_float Qnew1[2048];
 	cl_float Qnew2[2048];
-	for (int j = 0; j < arrayWidth; j++)
+	for (size_t j = 0; j < arrayWidth; j++)
 	{
-		for (int i = arrayHeight - 1; i > j; i--)
+		for (size_t i = arrayHeight - 1; i > j; i--)
 		{
 			// Calculate Givens rotations
 			a = R[arrayWidth * (i - 1) + j];
@@ -30,24 +30,24 @@ void QR(cl_float* R, cl_float* Q, cl_uint arrayWidth, cl_uint arrayHeight)
 			c = a / r;
 			s = -b / r;
 			// Zero out elements in R matrix
-			for (int k = j; k < arrayWidth; k++)
+			for (size_t k = j; k < arrayWidth; k++)
 			{
 				Rnew1[k] = R[arrayWidth * (i - 1) + k] * c - R[arrayWidth * i + k] * s;
 				Rnew2[k] = R[arrayWidth * (i - 1) + k] * s + R[arrayWidth * i + k] * c;
 			}
 			// Copy new values back to R matrix
-			for (int k = j; k < arrayWidth; k++)
+			for (size_t k = j; k < arrayWidth; k++)
 			{
 				R[arrayWidth * (i - 1) + k] = Rnew1[k];
 				R[arrayWidth * i + k] = Rnew2[k];
 			}
 			// Update Q matrix
-			for (int k = 0; k < arrayHeight; k++)
+			for (size_t k = 0; k < arrayHeight; k++)
 			{
 				Qnew1[k] = Q[arrayHeight * (i - 1) + k] * c + Q[arrayHeight * i + k] * s;
 				Qnew2[k] = -Q[arrayHeight * (i - 1) + k] * s + Q[arrayHeight * i + k] * c;
 			}
-			for (int k = 0; k < arrayHeight; k++)
+			for (size_t k = 0; k < arrayHeight; k++)
 			{
 				Q[arrayHeight * (i - 1) + k] = Qnew1[k];
 				Q[arrayHeight * i + k] = Qnew2[k];
@@ -59,58 +59,45 @@ void QR(cl_float* R, cl_float* Q, cl_uint arrayWidth, cl_uint arrayHeight)
 // Tests QR
 int Test_QR(ResultsStruct* results)
 {
-	const cl_uint arrayWidth = 3;
-	const cl_uint arrayHeight = 5;
-	cl_uint numIter = 10000; // Number of iterations for runtime averaging
+	const size_t arrayWidth = 3;
+	const size_t arrayHeight = 5;
 
-							 // allocate working buffers. 
-							 // the buffer should be aligned with 4K page and size should fit 64-byte cached line
-	cl_uint optimizedSize = ((sizeof(cl_float) * arrayWidth * arrayHeight - 1) / 64 + 1) * 64;
-	cl_float* A = (cl_float*)_aligned_malloc(optimizedSize, 4096);
+	float* A = (float*)malloc(sizeof(float)*arrayWidth*arrayHeight);
+	float* Q = (float*)malloc(sizeof(float)*arrayHeight*arrayHeight);
 
-	optimizedSize = ((sizeof(cl_float) * arrayHeight * arrayHeight - 1) / 64 + 1) * 64;
-	cl_float* Q = (cl_float*)_aligned_malloc(optimizedSize, 4096);
 
-	cl_float Atmp[] = { 0.8147, 0.0975, 0.1576,
-		0.9058, 0.2785, 0.9706,
-		0.1270, 0.5469, 0.9572,
-		0.9134, 0.9575, 0.4854,
-		0.6324, 0.9649, 0.8003 };
-
-	cl_float Qtmp[] = { 1.0,   0,   0,   0,   0,
-		0, 1.0,   0,   0,   0,
-		0,   0, 1.0,   0,   0,
-		0,   0,   0, 1.0,   0,
-		0,   0,   0,   0, 1.0 };
-
-	if (NULL == A)
-	{
-		LogError("Error: _aligned_malloc failed to allocate buffers.\n");
-		return -1;
-	}
+	float Atmp[] = { 1.000000, 0.000000,  0.000000,
+					 1.000000, 1.000000,  1.000000,
+					 1.000000, 2.000000,  4.000000,
+					 1.000000, 3.000000,  9.000000,
+					 1.000000, 4.000000, 16.000000 };
+	std::cout << "A: " << std::endl;
+	tools::printMatrix<float>(Atmp, arrayHeight, arrayWidth);
 
 	// Initialize A
-	for (int i = 0; i < arrayWidth * arrayHeight; i++)
-	{
+	for (size_t i = 0; i < arrayWidth * arrayHeight; ++i)
 		A[i] = Atmp[i];
-	}
 
 	// Initialize Q
-	for (int i = 0; i < arrayHeight * arrayHeight; i++)
-	{
-		Q[i] = Qtmp[i];
-	}
+	tools::CreateIdentityMatrix(arrayHeight, Q);
 
-	// add
+	// Perform QR Decomposition
 	ProfilerStruct profiler;
 	profiler.Start();
-
 	QR(A, Q, arrayWidth, arrayHeight);
-
 	profiler.Stop();
 	float runTime = profiler.Log();
 
-	_aligned_free(A);
+	std::cout << std::endl;
+	std::cout << "R: " << std::endl;
+	tools::printMatrix<float>(A, arrayHeight, arrayWidth);
+
+	std::cout << std::endl;
+	std::cout << "Q: " << std::endl;
+	tools::printMatrix<float>(Q, arrayHeight, arrayHeight);
+
+	free(A);
+	free(Q);
 
 	results->WindowsRunTime = (double)runTime;
 	results->HasWindowsRunTime = true;
@@ -179,14 +166,14 @@ int Test_BackSub(ResultsStruct* results)
 	std::cout << "Decimals Test: ";
 	{
 		const size_t cols = 5;
-		float Qtb[] = { 0.74882, 0.95545, 0.37916, 0.84571, 0.71664 };
-		float R[] = { 0.845668,   0.776442,   0.049804,   0.223160,   0.234288,
-					  0.321790,   0.953842,   0.344031,   0.673007,   0.565058,
-					  0.041129,   0.496991,   0.221390,   0.170497,   0.844328,
-					  0.814968,   0.691170,   0.545236,   0.780255,   0.518466,
-					  0.863745,   0.461225,   0.834668,   0.176055,   0.305269 };
+		float Qtb[] = { 0.74882f, 0.95545f, 0.37916f, 0.84571f, 0.71664f };
+		float R[] = { 0.845668f,   0.776442f,   0.049804f,   0.223160f,   0.234288f,
+					  0.321790f,   0.953842f,   0.344031f,   0.673007f,   0.565058f,
+					  0.041129f,   0.496991f,   0.221390f,   0.170497f,   0.844328f,
+					  0.814968f,   0.691170f,   0.545236f,   0.780255f,   0.518466f,
+					  0.863745f,   0.461225f,   0.834668f,   0.176055f,   0.305269f };
 		float Result[cols];
-		float Expected[] = { -1.46197, 2.4261, -6.87383, -0.47603, 2.34757 };
+		float Expected[] = { -1.46197f, 2.4261f, -6.87383f, -0.47603f, 2.34757f };
 
 		BackSub(R, Qtb, cols, Result);
 		if (tools::isEqual<float>(Result, Expected, cols))
@@ -219,7 +206,7 @@ void PolyEval(cl_float* coeffs, size_t order, cl_float* input, size_t numSamples
 		output[valIdx] = 0;
 		// sum: a0*x^0 + a1*x^1 + a2*x^2 + ... + an*x^n
 		for (size_t coef = 0; coef <= order; ++coef)
-			output[valIdx] += coeffs[coef] * pow(input[valIdx], coef);
+			output[valIdx] += coeffs[coef] * (float)pow(input[valIdx], coef);
 	}
 }
 
