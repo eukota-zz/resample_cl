@@ -37,6 +37,7 @@ std::map<int, ProblemGroup*> ControlClass::GroupFactory()
 	InputControl->problems_[++idx] = new Problem(&Test_LoadSampleData, "Read and print sample data.");
 	pgs[InputControl->GroupNum()] = InputControl;
 
+	idx = 0; // reset counter
 	ProblemGroup* projectFuncs = new ProblemGroup(1, "Control");
 	projectFuncs->problems_[++idx] = new Problem(&exCL_Resample, "OpenCL: Apply sixth-order polynomial");
 	projectFuncs->problems_[++idx] = new Problem(&Test_PolyEval, "Test Polynomial Evaluation Function");
