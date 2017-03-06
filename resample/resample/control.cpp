@@ -38,9 +38,9 @@ std::map<int, ProblemGroup*> ControlClass::GroupFactory()
 
 	ProblemGroup* projectFuncs = new ProblemGroup(1, "Control");
 	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&exCL_Resample, "OpenCL: Apply sixth-order polynomial");
-	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&exSeq_Resample, "Sequental: Apply sixth-order polynomial");
-	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&exSeq_QRD, "Sequental: QRD");
-	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&Test_BackSub, "Test BackSub Function");
+	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&Test_PolyEval, "Test Polynomial Evaluation Function");
+	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&Test_QR, "Test QR Decomposition Function");
+	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&Test_BackSub, "Test Back Substitution Function");
 	pgs[projectFuncs->GroupNum()] = projectFuncs;
 	return pgs;
 }

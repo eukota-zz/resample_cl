@@ -7,12 +7,6 @@
 #include "groups.h"
 #include "CL/cl.h"
 
-////////////////// RESAMPLE USING POLYNOMIAL APPROXIMATION /////////////////
-int exSeq_Resample(ResultsStruct* results)
-{
-	return 0;
-}
-
 // Calculate Q and R matrixes for QR Decomposition of matrix
 void QR(cl_float* R, cl_float* Q, cl_uint arrayWidth, cl_uint arrayHeight)
 {
@@ -62,7 +56,8 @@ void QR(cl_float* R, cl_float* Q, cl_uint arrayWidth, cl_uint arrayHeight)
 	}
 }
 
-int exSeq_QRD(ResultsStruct* results)
+// Tests QR
+int Test_QR(ResultsStruct* results)
 {
 	const cl_uint arrayWidth = 3;
 	const cl_uint arrayHeight = 5;
@@ -210,13 +205,80 @@ int Test_BackSub(ResultsStruct* results)
 	return 0;
 }
 
-// Sequential evaluation of polynomial Test
-// Evauluates data in ControlObject 
-int exSeq_PolyEval(ResultsStruct* results)
+// Sequentially evaluate polynomial results for input values with coefficients
+// @param[in] coeffs array of coefficients of size order+1
+// @param[in] order order of the polynomial
+// @param[in] input array of input values
+// @param[in] numSamples number of input values
+// @param[out] output array of calculated values
+void PolyEval(cl_float* coeffs, size_t order, cl_float* input, size_t numSamples, cl_float* output)
 {
-	// get coeffs from ControlObject
-	// get sample_rate_output_
-	// calculate output data
-	// write to output file
-	return -1;
+	// for each data point
+	for (size_t valIdx = 0; valIdx < numSamples; ++valIdx)
+	{
+		output[valIdx] = 0;
+		// sum: a0*x^0 + a1*x^1 + a2*x^2 + ... + an*x^n
+		for (size_t coef = 0; coef <= order; ++coef)
+		{
+			output[valIdx] += coeffs[coef] * pow(input[valIdx], coef);
+		}
+	}
+}
+
+// Tests PolyEval
+int Test_PolyEval(ResultsStruct* results)
+{
+	std::cout << std::endl;
+	std::cout << "Simple Test: ";
+	{
+		float coeffs[] = { 1, 1, 1 };
+		const size_t order = 2;
+
+		float input[] = { 0, 1, 2, 3, 4, 5 };
+		const size_t numSamples = 6;
+
+		float Result[numSamples];
+		float Expected[] = { 1, 3, 7, 13, 21, 31 };
+
+		PolyEval(coeffs, order, input, numSamples, Result);
+		if (tools::isEqual<float>(Result, Expected, numSamples))
+		{
+			std::cout << "SUCCESS!" << std::endl;
+		}
+		else
+		{
+			std::cout << "FAILURE!" << std::endl;
+			std::cout << "Expected: " << std::endl;
+			tools::printArray<float>(Expected, numSamples);
+			std::cout << "Actual: " << std::endl;
+			tools::printArray<float>(Result, numSamples);
+		}
+	}
+	std::cout << "Generated Data Test: ";
+	{
+		float coeffs[] = { 1, 2, 3, 4, 5, 6, 7 };
+		const size_t order = 6;
+
+		// @todo get input by using input generation functions
+		float input[] = { 0, 1, 2, 3, 4, 5 };
+		const size_t numSamples = 6;
+
+		float Result[numSamples];
+		float Expected[] = { 1, 1, 1, 1, 1, 1 };
+
+		PolyEval(coeffs, order, input, numSamples, Result);
+		if (tools::isEqual<float>(Result, Expected, numSamples))
+		{
+			std::cout << "SUCCESS!" << std::endl;
+		}
+		else
+		{
+			std::cout << "FAILURE!" << std::endl;
+			std::cout << "Expected: " << std::endl;
+			tools::printArray<float>(Expected, numSamples);
+			std::cout << "Actual: " << std::endl;
+			tools::printArray<float>(Result, numSamples);
+		}
+	}
+	return 0;
 }

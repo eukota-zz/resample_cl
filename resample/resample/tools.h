@@ -15,7 +15,7 @@ namespace tools
 		if (!a)
 			return;
 
-		std::cout << "[ ";
+		std::cout << "{ ";
 		for (size_t i = 0; i < s; ++i)
 		{
 			std::cout << a[i];
@@ -23,7 +23,7 @@ namespace tools
 				std::cout << ", ";
 
 		}
-		std::cout << " ]";
+		std::cout << " }";
 		if (printEndline)
 			std::cout << std::endl;
 	};
