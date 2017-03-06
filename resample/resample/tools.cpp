@@ -32,6 +32,26 @@ namespace tools
 		return v;
 	}
 
+	// Transposes the input matrix
+	// @param[in] input matrix to transpose
+	// @param[in] rows height of input matrix
+	// @param[in] cols width of input matrix
+	// @param[out] output transposed matrix
+	void TransposeMatrix(float* input, size_t rows, size_t cols, float* output)
+	{
+		if (!input || !rows || !cols || !output)
+			return;
+
+		for (size_t i = 0; i < rows; ++i)
+		{
+			for (size_t j = 0; j < cols; ++j)
+				output[j*rows + i] = input[i*cols + j];
+		}
+	}
+
+	// Creates Identity matrix of size size in output
+	// @param[in] size size of the identity matrix
+	// @param[out] output identity matrix output
 	void CreateIdentityMatrix(size_t size, float* output)
 	{
 		if (!output)
