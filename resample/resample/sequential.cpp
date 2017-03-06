@@ -56,9 +56,11 @@ void QR(cl_float* R, cl_float* Q, cl_uint arrayWidth, cl_uint arrayHeight)
 	}
 }
 
-// Tests QR
+// Tests QR Decomposition
+// Will print out Expected and Actual Q and/or R if it fails
 int Test_QR(ResultsStruct* results)
 {
+	std::cout << "Tes QR Decomposition: ";
 	const size_t arrayWidth = 3;
 	const size_t arrayHeight = 5;
 
@@ -71,8 +73,6 @@ int Test_QR(ResultsStruct* results)
 					 1.000000, 2.000000,  4.000000,
 					 1.000000, 3.000000,  9.000000,
 					 1.000000, 4.000000, 16.000000 };
-	std::cout << "A: " << std::endl;
-	tools::printMatrix<float>(Atmp, arrayHeight, arrayWidth);
 
 	// Initialize A
 	for (size_t i = 0; i < arrayWidth * arrayHeight; ++i)
@@ -88,19 +88,52 @@ int Test_QR(ResultsStruct* results)
 	profiler.Stop();
 	float runTime = profiler.Log();
 
-	std::cout << std::endl;
-	std::cout << "R: " << std::endl;
-	tools::printMatrix<float>(A, arrayHeight, arrayWidth);
+	float RExpected[] = { 2.23607f,  4.47214f, 13.41641f,
+						  0.00000f,  3.16228f,  12.64911f,
+						  0.00000f,  0.00000f,  3.74166f,
+						  0.00000f,  0.00000f,  0.00000f,
+						  0.00000f,  0.00000f,  0.00000f};
 
-	std::cout << std::endl;
-	std::cout << "Q: " << std::endl;
-	float* Qtmp = (float*)malloc(sizeof(float)*arrayHeight*arrayHeight);
-	tools::TransposeMatrix(Q, arrayHeight, arrayHeight, Qtmp);
-	tools::printMatrix<float>(Qtmp, arrayHeight, arrayHeight);
+	float QExpected[] = { 0.44721f,  0.63246f,  0.53452f,  0.33806f,  0.00000f,
+						 -0.44721f, -0.31623f,  0.26726f,  0.76064f,  0.22361f,
+						  0.44721f, -0.00000f, -0.53452f,  0.25355f,  0.67082f,
+						 -0.44721f,  0.31623f,  0.26726f, -0.42258f,  0.67082f,
+						  0.44721f, -0.63246f,  0.53452f, -0.25355f,  0.22361f};
+	bool failed = false;
+	if (!tools::isEqual<float>(A, RExpected, arrayWidth*arrayHeight))
+	{
+		std::cout << "FAIL" << std::endl;
 
+		std::cout << "A: " << std::endl;
+		tools::printMatrix<float>(Atmp, arrayHeight, arrayWidth);
+		std::cout << "EXPECTED R: " << std::endl;
+		tools::printMatrix<float>(A, arrayHeight, arrayWidth);
+		std::cout << "ACTUAL R: " << std::endl;
+		tools::printMatrix<float>(RExpected, arrayHeight, arrayWidth);
+
+		failed = true;
+	}
+	float* QTranspose = (float*)malloc(sizeof(float)*arrayHeight*arrayHeight);
+	tools::TransposeMatrix(Q, arrayHeight, arrayHeight, QTranspose);
+	if(!tools::isEqual<float>(QTranspose, QExpected, arrayHeight*arrayHeight))
+	{
+		std::cout << "FAIL" << std::endl;
+
+		std::cout << "A: " << std::endl;
+		tools::printMatrix<float>(Atmp, arrayHeight, arrayWidth);
+		std::cout << "EXPECTED Q: " << std::endl;
+		tools::printMatrix<float>(QExpected, arrayHeight, arrayHeight);
+		std::cout << "ACTUAL Q: " << std::endl;
+		tools::printMatrix<float>(QTranspose, arrayHeight, arrayHeight);
+
+		failed = true;
+	}
+	if(!failed)
+		std::cout << "SUCCESS" << std::endl;
+
+	free(QTranspose);
 	free(A);
 	free(Q);
-	free(Qtmp);
 
 	results->WindowsRunTime = (double)runTime;
 	results->HasWindowsRunTime = true;
