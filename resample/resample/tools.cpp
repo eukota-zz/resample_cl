@@ -117,17 +117,20 @@ namespace tools
 	// @param[in] numSamples number of samples to use (height of matrix)
 	// @param[in] order polynomial order (width of matrix - 1)
 	// @param[out] aMatirx the A matrix of size (numSamples)x(order+1)
-	void AMatrixGenerator(float* input, size_t numSamples, size_t order, float* aMatrix)
+	float* AMatrixGenerator(float* input, size_t numSamples, size_t order)
 	{
-		if (!input || !numSamples || !order || !aMatrix)
-			return;
+		if (!input || !numSamples || !order)
+			return NULL;
 
 		const size_t width = order + 1;
+		float* aMatrix = (float*)malloc(sizeof(float)*numSamples*width);
+
 		for (size_t i = 0; i < numSamples; ++i)
 		{
 			for (int j = 0; j < width; ++j)
 				aMatrix[i*width + j] = pow(input[i], j);
 		}
+		return aMatrix;
 	}
 
 	// Generates sinusoidal complex IQ signal
@@ -169,6 +172,93 @@ int Test_IncrementalArrayGenerator(ResultsStruct* results)
 	return -1;
 }
 
+// Tests AMatrixGenerator
+int Test_AMatrixGenerator(ResultsStruct* results)
+{
+	const size_t numSamples = 3;
+	float input[numSamples] = { 1, 2, 3 };
+	const size_t order = 2;
+
+	std::cout << "Test Simple Input: ";
+	try
+	{
+		float aMatrixExpected[] = { 1, 1, 1,
+									1, 2, 4,
+									1, 3, 9 };
+		float* aMatrix = tools::AMatrixGenerator(input, numSamples, order);
+		for (size_t row = 0; row < numSamples; ++row)
+		{
+			for (size_t col = 0; col < order + 1; ++col)
+			{
+				const size_t idx = row*(order + 1) + col;
+				if (aMatrixExpected[idx] != aMatrix[idx])
+					throw;
+			}
+		}
+		free(aMatrix);
+				
+	}
+	catch (...)
+	{
+		std::cout << "FAIL - AMatrix calculation did not match" << std::endl;
+		return -1;
+	}
+	std::cout << "SUCCESS" << std::endl;
+
+	std::cout << "Test Invalid Input Array: ";
+	try
+	{
+		float* aMatrix = tools::AMatrixGenerator(NULL, numSamples, order);
+		if (aMatrix)
+		{
+			free(aMatrix);
+			throw;
+		}
+	}
+	catch (...)
+	{
+		std::cout << "FAIL - should not init AMatrix on invalid input array" << std::endl;
+		return -1;
+	}
+	std::cout << "SUCCESS" << std::endl;
+
+	std::cout << "Test Invalid Sample Count: ";
+	try
+	{
+		float* aMatrix = tools::AMatrixGenerator(input, 0, 2);
+		if (aMatrix)
+		{
+			free(aMatrix);
+			throw;
+		}
+	}
+	catch (...)
+	{
+		std::cout << "FAIL - should not init AMatrix on invalid sample count" << std::endl;
+		return -1;
+	}
+	std::cout << "SUCCESS" << std::endl;
+
+	std::cout << "Test Invalid Order: ";
+	try
+	{
+		float* aMatrix = tools::AMatrixGenerator(input, 3, 0);
+		if (aMatrix)
+		{
+			free(aMatrix);
+			throw;
+		}
+	}
+	catch (...)
+	{
+		std::cout << "FAIL - should not init AMatrix on invalid order" << std::endl;
+		return -1;
+	}
+	std::cout << "SUCCESS" << std::endl;
+
+	return 0;
+}
+
 // Tests SignalGenerator
 int Test_SignalGenerator(ResultsStruct* results)
 {
@@ -208,7 +298,7 @@ int Test_MatrixByColumnVector(ResultsStruct* results)
 	std::cout << std::endl;
 	std::cout << "Matrix * Vector: " << std::endl;
 	tools::printArray<float>(output, 3, true);
-	/// @TODO update to pass or fail by comapring to expected results
+	/// @TODO update to pass or fail by comparing to expected results
 	return 0;
 }
 

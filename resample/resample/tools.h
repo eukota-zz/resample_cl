@@ -82,11 +82,12 @@ namespace tools
 
 	float* IncrementalArrayGenerator_ByStep(float start, float end, float stepVal);
 	float* IncrementalArrayGenerator_BySize(float start, float stepVal, size_t sampleCount);
-	void AMatrixGenerator(float* input, size_t numSamples, size_t order, float* aMatrix);
+	float* AMatrixGenerator(float* input, size_t numSamples, size_t order);
 	void SignalGenerator(float sampleRate, float freq, float noiseLevel, size_t numSamples, float* resReal, float* resImag);
 
 }
 
 struct ResultsStruct;
 int Test_SignalGenerator(ResultsStruct* results);
+int Test_AMatrixGenerator(ResultsStruct* results);
 int Test_MatrixByColumnVector(ResultsStruct* results);

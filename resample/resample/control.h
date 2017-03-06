@@ -6,14 +6,13 @@ class ControlClass : public GroupManager
 {
 public:
 	ControlClass();
-	~ControlClass()
-	{
-		free(sample_data_);
-	}
+	~ControlClass();
+
 	virtual std::string ProblemGroupName() { return "Control"; }
 	virtual std::string ProblemName() { return ""; }
 	std::map<int, ProblemGroup*> GroupFactory();
 
+	// Sample Data
 	int LoadSampleData(bool printPoints = false);
 	float* sample_data_;
 	int sample_rate_input_;

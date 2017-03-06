@@ -15,6 +15,8 @@
 #include "sequential.h"
 #include <fstream>
 
+ControlClass* ControlObject;
+
 ControlClass::ControlClass()
 	: GroupManager("Control")
 	, sample_data_(NULL)
@@ -24,7 +26,11 @@ ControlClass::ControlClass()
 {
 	groups_ = GroupFactory();
 }
-ControlClass* ControlObject;
+
+ControlClass::~ControlClass()
+{
+	free(sample_data_);
+}
 
 std::map<int, ProblemGroup*> ControlClass::GroupFactory()
 {
@@ -44,6 +50,7 @@ std::map<int, ProblemGroup*> ControlClass::GroupFactory()
 	projectFuncs->problems_[++idx] = new Problem(&Test_QR, "Test QR Decomposition Function");
 	projectFuncs->problems_[++idx] = new Problem(&Test_BackSub, "Test Back Substitution Function");
 	projectFuncs->problems_[++idx] = new Problem(&Test_SignalGenerator, "Test Signal Generator Function");
+	projectFuncs->problems_[++idx] = new Problem(&Test_AMatrixGenerator, "Test AMatrix Generator Function");
 	projectFuncs->problems_[++idx] = new Problem(&Test_MatrixByColumnVector, "Test Matrix Mutlipication Function");
 	pgs[projectFuncs->GroupNum()] = projectFuncs;
 	return pgs;
