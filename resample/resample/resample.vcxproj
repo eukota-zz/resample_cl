@@ -179,6 +179,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="constants.cpp" />
     <ClCompile Include="control.cpp" />
     <ClCompile Include="data.cpp" />
     <ClCompile Include="enums.cpp" />
@@ -192,6 +193,7 @@
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="constants.h" />
     <ClInclude Include="control.h" />
     <ClInclude Include="data.h" />
     <ClInclude Include="enums.h" />

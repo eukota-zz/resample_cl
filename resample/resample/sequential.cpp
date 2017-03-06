@@ -1,5 +1,6 @@
 #include "sequential.h"
 #include "utils.h"
+#include "tools.h"
 #include "stdlib.h"
 #include "control.h"
 #include "profiler.h"
@@ -136,8 +137,9 @@ void BackSub(cl_float* R, cl_float* Qtb, size_t Dim, cl_float* Result)
 
 	// Start at the Nth row in the right-triangular matrix R where we effectively have R[n][n] * x[n] = Qtb[n]
 	// Work our way up solving for each x[n] value in reverse, allowing us to solve for each row as we work our way up
-	for (size_t resultIdx = Dim - 1; resultIdx >= 0; --resultIdx)
+	for (size_t i = Dim; i > 0; --i)
 	{
+		const size_t resultIdx = i - 1;
 		const size_t RRowStartIdx = resultIdx*Dim; // since R is indexed as an array instead of a matrix
 
 		// sum up product of remaining row of R with known x values
@@ -154,11 +156,58 @@ void BackSub(cl_float* R, cl_float* Qtb, size_t Dim, cl_float* Result)
 // Tests BackSub
 int Test_BackSub(ResultsStruct* results)
 {
-	// get R matrix
-	// get column vector product of Q matrix and b column vector
-	// run BackSub function to solve for coefficients
-	// store coefficients in ControlObject
-	return -1;
+	std::cout << std::endl;
+	std::cout << "Simple Test: ";
+	{
+		const size_t cols = 3;
+		float Qtb[] = {4, -1, 2};
+		float R[] = { 1, -2,  1,
+					  0,  1,  6,
+					  0,  0,  1 };
+		float Result[cols];
+		float Expected[] = { -24, -13, 2 };
+
+		BackSub(R, Qtb, cols, Result);
+		if (tools::isEqual<float>(Result, Expected, cols))
+		{
+			std::cout << "SUCCESS!" << std::endl;
+		}
+		else
+		{
+			std::cout << "FAILURE!" << std::endl;
+			std::cout << "Expected: " << std::endl;
+			tools::printArray<float>(Expected, cols);
+			std::cout << "Actual: " << std::endl;
+			tools::printArray<float>(Result, cols);
+		}
+	}
+	std::cout << "Decimals Test: ";
+	{
+		const size_t cols = 5;
+		float Qtb[] = { 0.74882, 0.95545, 0.37916, 0.84571, 0.71664 };
+		float R[] = { 0.845668,   0.776442,   0.049804,   0.223160,   0.234288,
+					  0.321790,   0.953842,   0.344031,   0.673007,   0.565058,
+					  0.041129,   0.496991,   0.221390,   0.170497,   0.844328,
+					  0.814968,   0.691170,   0.545236,   0.780255,   0.518466,
+					  0.863745,   0.461225,   0.834668,   0.176055,   0.305269 };
+		float Result[cols];
+		float Expected[] = { -1.46197, 2.4261, -6.87383, -0.47603, 2.34757 };
+
+		BackSub(R, Qtb, cols, Result);
+		if (tools::isEqual<float>(Result, Expected, cols))
+		{
+			std::cout << "SUCCESS!" << std::endl;
+		}
+		else
+		{
+			std::cout << "FAILURE!" << std::endl;
+			std::cout << "Expected: " << std::endl;
+			tools::printArray<float>(Expected, cols);
+			std::cout << "Actual: " << std::endl;
+			tools::printArray<float>(Result, cols);
+		}
+	}
+	return 0;
 }
 
 // Sequential evaluation of polynomial Test

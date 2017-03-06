@@ -2,13 +2,6 @@
 #include <map>
 #include <vector>
 
-extern int SAMPLE_SIZE;
-extern bool SKIP_VERIFICATION;
-extern bool PRINT_TO_FILE;
-extern std::string RESULTS_FILE;
-extern unsigned int RUN_COUNT;
-extern float MIN_DIFF;
-
 struct ResultsStruct
 {
 	ResultsStruct();

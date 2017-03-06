@@ -6,14 +6,7 @@
 #include "tools.h"
 #include "utils.h"
 #include "groups.h"
-
-int SAMPLE_SIZE = 1024;
-bool SKIP_VERIFICATION = false;
-bool PRINT_TO_FILE = false;
-std::string RESULTS_FILE = "results.txt";
-unsigned int RUN_COUNT = 1;
-float MIN_DIFF = (float)0.001;
-
+#include "constants.h"
 
 ResultsStruct::ResultsStruct()
 	: WindowsRunTime(0.0)
@@ -192,7 +185,7 @@ ProblemGroup* GroupManagerInputControlFactory()
 	std::stringstream sampleSizeDesc;
 	sampleSizeDesc << "Set Sample Size (defaults to " << SAMPLE_SIZE << ")";
 	std::stringstream minDiffDesc;
-	minDiffDesc << "Set minimum difference for verifications (defaults to " << MIN_DIFF << ")";
+	minDiffDesc << "Set maximum difference for verifications (defaults to " << MAX_DIFF << ")";
 
 	ProblemGroup* InputControl = new ProblemGroup(0, "Input Control");
 	InputControl->problems_[++num] = new Problem(&SetSampleSize, sampleSizeDesc.str());
@@ -212,10 +205,10 @@ int SetSampleSize(ResultsStruct* results)
 }
 int ComparisonThreshold(ResultsStruct* results)
 {
-	std::cout << "Enter minimum difference value (currently " << MIN_DIFF << "): ";
-	float i = MIN_DIFF;
+	std::cout << "Enter maximum difference value (currently " << MAX_DIFF << "): ";
+	float i = MAX_DIFF;
 	std::cin >> i;
-	MIN_DIFF = i;
+	MAX_DIFF = i;
 	return 0;
 }
 int SkipVerify(ResultsStruct* results)
@@ -247,6 +240,6 @@ int SetResultsFile(ResultsStruct* results)
 	std::cout << "Enter path to output file to (currently " << RESULTS_FILE << "): ";
 	std::string s(RESULTS_FILE);
 	std::cin >> s;
-	RESULTS_FILE = s;
+	RESULTS_FILE = s.c_str();
 	return 0;
 }

@@ -40,6 +40,7 @@ std::map<int, ProblemGroup*> ControlClass::GroupFactory()
 	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&exCL_Resample, "OpenCL: Apply sixth-order polynomial");
 	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&exSeq_Resample, "Sequental: Apply sixth-order polynomial");
 	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&exSeq_QRD, "Sequental: QRD");
+	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&Test_BackSub, "Test BackSub Function");
 	pgs[projectFuncs->GroupNum()] = projectFuncs;
 	return pgs;
 }

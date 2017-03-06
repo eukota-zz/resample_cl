@@ -6,6 +6,7 @@
 #include "data.h"
 #include "profiler.h"
 #include "CL/cl.h"
+#include "constants.h"
 
 namespace
 {
