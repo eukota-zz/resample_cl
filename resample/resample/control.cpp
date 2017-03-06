@@ -33,7 +33,7 @@ std::map<int, ProblemGroup*> ControlClass::GroupFactory()
 	ProblemGroup* InputControl = GroupManagerInputControlFactory();
 	InputControl->problems_[InputControl->problems_.size() + 1] = new Problem(&SetInputDataFile, "Set the file path to read sample data from.");
 	InputControl->problems_[InputControl->problems_.size() + 1] = new Problem(&SetSampleRates, "Set the input and output sample rates.");
-	InputControl->problems_[InputControl->problems_.size() + 1] = new Problem(&readSampleDataTest, "Read and print sample data.");
+	InputControl->problems_[InputControl->problems_.size() + 1] = new Problem(&Test_LoadSampleData, "Read and print sample data.");
 	pgs[InputControl->GroupNum()] = InputControl;
 
 	ProblemGroup* projectFuncs = new ProblemGroup(1, "Control");
@@ -41,6 +41,7 @@ std::map<int, ProblemGroup*> ControlClass::GroupFactory()
 	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&Test_PolyEval, "Test Polynomial Evaluation Function");
 	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&Test_QR, "Test QR Decomposition Function");
 	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&Test_BackSub, "Test Back Substitution Function");
+	projectFuncs->problems_[projectFuncs->problems_.size() + 1] = new Problem(&Test_SignalGenerator, "Test Signal Generator Function");
 	pgs[projectFuncs->GroupNum()] = projectFuncs;
 	return pgs;
 }
@@ -107,7 +108,7 @@ int SetInputDataFile(ResultsStruct* results)
 
 // Reads sample data and prints it to the screen
 // Uses LoadSampleData() function with optional print bool set to true
-int readSampleDataTest(ResultsStruct* results)
+int Test_LoadSampleData(ResultsStruct* results)
 {
 	// returns number of loaded
 	bool printPoints = true; // for test purposes

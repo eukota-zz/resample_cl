@@ -219,9 +219,7 @@ void PolyEval(cl_float* coeffs, size_t order, cl_float* input, size_t numSamples
 		output[valIdx] = 0;
 		// sum: a0*x^0 + a1*x^1 + a2*x^2 + ... + an*x^n
 		for (size_t coef = 0; coef <= order; ++coef)
-		{
 			output[valIdx] += coeffs[coef] * pow(input[valIdx], coef);
-		}
 	}
 }
 
@@ -229,7 +227,7 @@ void PolyEval(cl_float* coeffs, size_t order, cl_float* input, size_t numSamples
 int Test_PolyEval(ResultsStruct* results)
 {
 	std::cout << std::endl;
-	std::cout << "Simple Test: ";
+	std::cout << "Simple Test 1: ";
 	{
 		float coeffs[] = { 1, 1, 1 };
 		const size_t order = 2;
@@ -254,18 +252,16 @@ int Test_PolyEval(ResultsStruct* results)
 			tools::printArray<float>(Result, numSamples);
 		}
 	}
-	std::cout << "Generated Data Test: ";
+	std::cout << std::endl << "Simple Test 2: ";
 	{
-		float coeffs[] = { 1, 2, 3, 4, 5, 6, 7 };
-		const size_t order = 6;
+		float coeffs[] = { 1, 2, 3, 4, 5, 6, 7, 8 };
+		const size_t order = 7;
 
-		// @todo get input by using input generation functions
-		float input[] = { 0, 1, 2, 3, 4, 5 };
-		const size_t numSamples = 6;
+		float input[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+		const size_t numSamples = 10;
 
 		float Result[numSamples];
-		float Expected[] = { 1, 1, 1, 1, 1, 1 };
-
+		float Expected[] = { 36, 1793, 24604, 167481, 756836, 2620201, 7526268, 18831568, 42374116, 87654320 };
 		PolyEval(coeffs, order, input, numSamples, Result);
 		if (tools::isEqual<float>(Result, Expected, numSamples))
 		{
@@ -280,5 +276,6 @@ int Test_PolyEval(ResultsStruct* results)
 			tools::printArray<float>(Result, numSamples);
 		}
 	}
+
 	return 0;
 }

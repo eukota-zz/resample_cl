@@ -28,6 +28,6 @@ extern ControlClass* ControlObject;
 
 int SetSampleRates(ResultsStruct* results);
 int SetInputDataFile(ResultsStruct* results);
-int readSampleDataTest(ResultsStruct* results);
+int Test_LoadSampleData(ResultsStruct* results);
 
 
