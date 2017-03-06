@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <iomanip>
 #include "constants.h"
 
 namespace tools
@@ -43,6 +44,7 @@ namespace tools
 		if (!M)
 			return;
 
+		std::cout << std::showpos << std::fixed << std::setprecision(5);
 		for (size_t i = 0; i < rows; ++i)
 		{
 			std::cout << "[ ";
