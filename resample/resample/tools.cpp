@@ -49,6 +49,24 @@ namespace tools
 		}
 	}
 
+	// Multiplies matrix by columnVector and puts result in output
+	// @param[in] matrix matrix of size NxN
+	// @param[in] columnVector array of size Nx1
+	// @param[in] size value for N
+	// @param[out] output results
+	void MatrixByColumnVector(float* matrix, float* columnVector, size_t size, float* output)
+	{
+		if (!matrix || !columnVector || !size || !output)
+			return;
+
+		for (size_t i = 0; i < size; ++i)
+		{
+			output[i] = 0.0f;
+			for (size_t j = 0; j < size; ++j)
+				output[i] += matrix[i*size + j] * columnVector[j];
+		}
+	}
+
 	// Creates Identity matrix of size size in output
 	// @param[in] size size of the identity matrix
 	// @param[out] output identity matrix output
@@ -171,4 +189,27 @@ int Test_SignalGenerator(ResultsStruct* results)
 
 	return 0;
 }
+
+// Tests MatrixByColumnVector
+int Test_MatrixByColumnVector(ResultsStruct* results)
+{
+	float matrix[] = { 1,2,3,
+					   4,5,6,
+					   7,8,9 };
+	float columnVector[] = { 1, 2, 3 };
+	float output[3];
+	tools::MatrixByColumnVector(matrix, columnVector, 3, output);
+
+	std::cout << "Matrix: " << std::endl;
+	tools::printMatrix<float>(matrix, 3, 3);
+	std::cout << std::endl;
+	std::cout << "Vector: " << std::endl;
+	tools::printArray<float>(columnVector, 3, true);
+	std::cout << std::endl;
+	std::cout << "Matrix * Vector: " << std::endl;
+	tools::printArray<float>(output, 3, true);
+	/// @TODO update to pass or fail by comapring to expected results
+	return 0;
+}
+
 

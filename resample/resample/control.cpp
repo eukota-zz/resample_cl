@@ -44,6 +44,7 @@ std::map<int, ProblemGroup*> ControlClass::GroupFactory()
 	projectFuncs->problems_[++idx] = new Problem(&Test_QR, "Test QR Decomposition Function");
 	projectFuncs->problems_[++idx] = new Problem(&Test_BackSub, "Test Back Substitution Function");
 	projectFuncs->problems_[++idx] = new Problem(&Test_SignalGenerator, "Test Signal Generator Function");
+	projectFuncs->problems_[++idx] = new Problem(&Test_MatrixByColumnVector, "Test Matrix Mutlipication Function");
 	pgs[projectFuncs->GroupNum()] = projectFuncs;
 	return pgs;
 }

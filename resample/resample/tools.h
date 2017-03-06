@@ -78,6 +78,7 @@ namespace tools
 
 	void CreateIdentityMatrix(size_t size, float* output);
 	void TransposeMatrix(float* input, size_t rows, size_t cols, float* output);
+	void MatrixByColumnVector(float* matrix, float* columnVector, size_t size, float* output);
 
 	float* IncrementalArrayGenerator_ByStep(float start, float end, float stepVal);
 	float* IncrementalArrayGenerator_BySize(float start, float stepVal, size_t sampleCount);
@@ -88,3 +89,4 @@ namespace tools
 
 struct ResultsStruct;
 int Test_SignalGenerator(ResultsStruct* results);
+int Test_MatrixByColumnVector(ResultsStruct* results);
