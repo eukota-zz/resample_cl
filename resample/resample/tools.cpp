@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <fstream>
 #include "tools.h"
 
 #include "utils.h"
@@ -37,17 +38,36 @@ namespace tools
 	// @param[in] input matrix to transpose
 	// @param[in] rows height of input matrix
 	// @param[in] cols width of input matrix
-	// @param[out] output transposed matrix
-	void TransposeMatrix(float* input, size_t rows, size_t cols, float* output)
+	// @return transposed matrix
+	// NOTE: CALLER TAKES OWNERSHIP OF RETURN VALUE
+	float* TransposeMatrix(float* input, size_t rows, size_t cols)
 	{
-		if (!input || !rows || !cols || !output)
-			return;
+		if (!input || !rows || !cols)
+			return NULL;
 
+		float* output = (float*)malloc(sizeof(float)*rows*cols);
 		for (size_t i = 0; i < rows; ++i)
 		{
 			for (size_t j = 0; j < cols; ++j)
 				output[j*rows + i] = input[i*cols + j];
 		}
+		return output;
+	}
+
+	// @param[in] matrix matrix to copy
+	// @param[in] rows height of matrix
+	// @param[in] cols width of matrix
+	// @return new copy of matrix
+	// NOTE: CALLER TAKES OWNERSHIP OF RETURN VALUE
+	float* CopyMatrix(float* matrix, size_t rows, size_t cols)
+	{
+		if (!matrix || !rows || !cols)
+			return NULL;
+		const size_t size = rows*cols;
+		float* result = (float*)malloc(sizeof(float)*size);
+		for (size_t i = 0; i < size; ++i)
+			result[i] = matrix[i];
+		return result;
 	}
 
 	// Multiplies two matrices together [A]*[B] where A is MxN and B is NxL
@@ -144,7 +164,7 @@ namespace tools
 	// @param[in] order polynomial order (width of matrix - 1)
 	// @param[out] aMatirx the A matrix of size (numSamples)x(order+1)
 	// NOTE: CALLER TAKES OWNERSHIP OF RETURN VALUE
-	float* AMatrixGenerator(float* input, size_t numSamples, size_t order)
+	float* GenerateAMatrix(float* input, size_t numSamples, size_t order)
 	{
 		if (!input || !numSamples || !order)
 			return NULL;
@@ -181,6 +201,53 @@ namespace tools
 			resImag[i] = sin(twoPiF * t) + noiseLevel * (2 * (float)rand() / (float)RAND_MAX - 1);
 		}
 	}
+
+
+	// Reads csv file into a matrix and returns it
+	// @param[in] file path to file to read
+	// @param[out] rows number of rows in the file
+	// @param[out] number of columns
+	// @return matrix in array form with all data
+	float* LoadDataFile(const std::string& file, size_t* rows, size_t* cols)
+	{
+		std::ifstream ifs(file.c_str(), std::ifstream::in);
+		if (!ifs.good())
+			return NULL;
+		std::vector<std::vector<float>> points;
+		if (ifs.is_open())
+		{
+			std::string line;
+			while (std::getline(ifs, line))
+			{
+				std::vector<std::string> split = tools::split(line, ",");
+				std::vector<float> row;
+				for (size_t i = 0; i < split.size(); ++i)
+				{
+					row.push_back(std::stof(split[i]));
+				}
+				points.push_back(row);
+			}
+			ifs.close();
+		}
+		const size_t width = points.front().size();
+		const size_t height = points.size();
+		const size_t size = width*height;
+		float* data = (float*)malloc(sizeof(float*)*size);
+		for (size_t row = 0; row < height; ++row)
+		{
+			for (size_t col = 0; col < width; ++col)
+			{
+				const size_t idx = row*width + col;
+				data[idx] = points[row][col];
+			}
+		}
+		if (rows)
+			*rows = height;
+		if (cols)
+			*cols = width;
+		return data;
+	}
+
 }
 
 struct ResultsStruct; // forward declare
@@ -240,8 +307,8 @@ int Test_IncrementalArrayGenerator(ResultsStruct* results)
 	return -1;
 }
 
-// Tests AMatrixGenerator
-int Test_AMatrixGenerator(ResultsStruct* results)
+// Tests GenerateAMatrix
+int Test_GenerateAMatrix(ResultsStruct* results)
 {
 	const size_t numSamples = 3;
 	float input[numSamples] = { 1, 2, 3 };
@@ -253,7 +320,7 @@ int Test_AMatrixGenerator(ResultsStruct* results)
 		float aMatrixExpected[] = { 1, 1, 1,
 									1, 2, 4,
 									1, 3, 9 };
-		float* aMatrix = tools::AMatrixGenerator(input, numSamples, order);
+		float* aMatrix = tools::GenerateAMatrix(input, numSamples, order);
 		for (size_t row = 0; row < numSamples; ++row)
 		{
 			for (size_t col = 0; col < order + 1; ++col)
@@ -276,7 +343,7 @@ int Test_AMatrixGenerator(ResultsStruct* results)
 	std::cout << "Test Invalid Input Array: ";
 	try
 	{
-		float* aMatrix = tools::AMatrixGenerator(NULL, numSamples, order);
+		float* aMatrix = tools::GenerateAMatrix(NULL, numSamples, order);
 		if (aMatrix)
 		{
 			free(aMatrix);
@@ -293,7 +360,7 @@ int Test_AMatrixGenerator(ResultsStruct* results)
 	std::cout << "Test Invalid Sample Count: ";
 	try
 	{
-		float* aMatrix = tools::AMatrixGenerator(input, 0, 2);
+		float* aMatrix = tools::GenerateAMatrix(input, 0, 2);
 		if (aMatrix)
 		{
 			free(aMatrix);
@@ -310,7 +377,7 @@ int Test_AMatrixGenerator(ResultsStruct* results)
 	std::cout << "Test Invalid Order: ";
 	try
 	{
-		float* aMatrix = tools::AMatrixGenerator(input, 3, 0);
+		float* aMatrix = tools::GenerateAMatrix(input, 3, 0);
 		if (aMatrix)
 		{
 			free(aMatrix);
@@ -344,6 +411,143 @@ int Test_SignalGenerator(ResultsStruct* results)
 	std::cout << std::endl << "Q Data: " << std::endl;
 	tools::printArray<float>(imagData, numSamples);
 	std::cout << std::endl;
+
+	return 0;
+}
+
+// Tests TransposeMatrix
+int Test_TransposeMatrix(ResultsStruct* results)
+{
+	float in[] = { 1.0f, 2.0f, 3.0f,
+		 		   4.0f, 5.0f, 6.0f };
+	float expected[] = { 1.0f, 4.0f,
+						 2.0f, 5.0f,
+						 3.0f, 6.0f };
+	std::cout << "Test Null Matrix Input: ";
+	{
+		float* res = tools::TransposeMatrix(NULL, 2, 3);
+		if (res)
+		{
+			std::cout << "FAIL - TransposeMatrix worked with NULL input";
+			free(res);
+		}
+		else
+			std::cout << "SUCCESS";
+		std::cout << std::endl;
+	}
+	std::cout << "Test Zero Row Entry: ";
+	{
+		float* res = tools::TransposeMatrix(in, 0, 4);
+		if (res)
+		{
+			std::cout << "FAIL - TransposeMatrix worked with row size of zero";
+			free(res);
+		}
+		else
+			std::cout << "SUCCESS";
+		std::cout << std::endl;
+	}
+	std::cout << "Test Zero Column Entry: ";
+	{
+		float* res = tools::TransposeMatrix(in, 4, 0);
+		if (res)
+		{
+			std::cout << "FAIL - TransposeMatrix worked with column size of zero";
+			free(res);
+		}
+		else
+			std::cout << "SUCCESS";
+		std::cout << std::endl;
+	}
+	std::cout << "Test Valid Copy: ";
+	{
+		float* res = tools::TransposeMatrix(in, 2, 3);
+		if (!res)
+			std::cout << "FAIL - TransposeMatrix failed to copy valid matrix";
+		else
+		{
+			if (!tools::isEqual<float>(res, expected, 6))
+			{
+				std::cout << "FAIL" << std::endl;
+				std::cout << "EXPECTED: ";
+				tools::printMatrix<float>(expected, 3, 2);
+				std::cout << "ACTUAL: ";
+				tools::printMatrix<float>(res, 3, 2);
+			}
+			else
+				std::cout << "SUCCESS";
+			free(res);
+		}
+		std::cout << std::endl;
+	}
+
+	return 0;
+}
+
+
+// Tests CopyMatrix
+int Test_CopyMatrix(ResultsStruct* results)
+{
+	float in[] = { 1.0f, 2.0f, 3.0f,
+				   4.0f, 5.0f, 6.0f };
+
+	std::cout << "Test Null Matrix Input: ";
+	{
+		float* res = tools::CopyMatrix(NULL, 2, 3);
+		if (res)
+		{
+			std::cout << "FAIL - CopyMatrix worked with NULL input";
+			free(res);
+		}
+		else
+			std::cout << "SUCCESS";
+		std::cout << std::endl;
+	}
+	std::cout << "Test Zero Row Entry: ";
+	{
+		float* res = tools::CopyMatrix(in, 0, 3);
+		if (res)
+		{
+			std::cout << "FAIL - CopyMatrix worked with row size of zero";
+			free(res);
+		}
+		else
+			std::cout << "SUCCESS";
+		std::cout << std::endl;
+	}
+	std::cout << "Test Zero Column Entry: ";
+	{
+		float* res = tools::CopyMatrix(in, 2, 0);
+		if (res)
+		{
+			std::cout << "FAIL - CopyMatrix worked with column size of zero";
+			free(res);
+		}
+		else
+			std::cout << "SUCCESS";
+		std::cout << std::endl;
+	}
+	std::cout << "Test Valid Copy: ";
+	{
+		float* res = tools::CopyMatrix(in, 2, 3);
+		if (!res)
+			std::cout << "FAIL - CopyMatrix failed to copy valid matrix";
+		else
+		{
+			if (!tools::isEqual<float>(in, res, 6))
+			{
+				std::cout << "FAIL" << std::endl;
+				std::cout << "EXPECTED: ";
+				tools::printMatrix<float>(in, 2, 3);
+				std::cout << "ACTUAL: ";
+				tools::printMatrix<float>(res, 2, 3);
+			}
+			else
+				std::cout << "SUCCESS";
+			free(res);
+		}
+		std::cout << std::endl;
+	}
 
 	return 0;
 }
@@ -432,3 +636,18 @@ int Test_MatrixMultiplier(ResultsStruct* results)
 
 	return 0;
 }
+
+// Reads sample data and prints it to the screen
+// Uses LoadSampleData() function with optional print bool set to true
+int Test_LoadDataFile(ResultsStruct* results)
+{
+	// returns number of loaded
+	size_t rows = 0;
+	size_t cols = 0;
+	float* data = tools::LoadDataFile("..\\data\\default.csv", &rows, &cols);
+	std::cout << "Points Loaded: " << std::endl;
+	tools::printMatrix(data, rows, cols);
+	free(data);
+	return 0;
+}
+

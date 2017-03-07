@@ -13,7 +13,6 @@ public:
 	std::map<int, ProblemGroup*> GroupFactory();
 
 	// Sample Data
-	int LoadSampleData(bool printPoints = false);
 	float* sample_data_;
 	int sample_rate_input_;
 	int sample_rate_output_;
@@ -27,6 +26,6 @@ extern ControlClass* ControlObject;
 
 int SetSampleRates(ResultsStruct* results);
 int SetInputDataFile(ResultsStruct* results);
-int Test_LoadSampleData(ResultsStruct* results);
+
 
 

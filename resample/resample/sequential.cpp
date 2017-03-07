@@ -7,8 +7,153 @@
 #include "groups.h"
 #include "CL/cl.h"
 
+// Resample data from inputFile assuming inputRate and resampling at outputRate using LSA polynomial of order
+// @param[in] inputFile path to signal data - expected to be sampleSize-by-1
+// @param[in] inputRate input sample rate in samples per second
+// @param[in] outputRate output sample rate in samples per second
+// @param[in] order polynomial order to use
+// @param[out] optional output paramater is coefficients of LSA polynomial
+// @return resampled data
+cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t outputRate, size_t order, cl_float* coeffs)
+{
+	// Load Signal Data
+	size_t rows = 0;
+	size_t cols = 0;
+	float* signalData = tools::LoadDataFile(inputFile, &rows, &cols);
+	if (cols > 1)
+	{
+		LogError("Resample signal data file has too many inputs");
+		free(signalData);
+		return NULL;
+	}
+	const size_t sampleCount = rows;
+
+	// create input time vector
+	const float inputTimeStep = 1 / (float)inputRate;
+	const float inputTimeEnd = (float)sampleCount / (float)inputRate;
+	float* inputTimes = tools::IncrementalArrayGenerator_ByStep(0.0f, inputTimeEnd, inputTimeStep);
+
+	// create A matrix
+	float* matrixA = tools::GenerateAMatrix(inputTimes, sampleCount, order);
+
+	// perform QR to get Q and R matrixes
+	cl_float* R = tools::CopyMatrix(matrixA, sampleCount, order + 1);
+	cl_float* Q = tools::CreateIdentityMatrix(sampleCount);
+	QR(R, Q, order+1, sampleCount);
+
+	// multiply Q by signal input data to get Qtb
+	cl_float* Qtb = tools::MatrixMultiplier(Q, sampleCount, sampleCount, signalData, sampleCount, 1);
+
+	// perform BackSub to get coefficients
+	if (coeffs)
+		free(coeffs);
+	coeffs = BackSub(R, Qtb, order+1);
+
+	// Generate output sample times to evaulate at
+	const float outputTimeStep = 1.0f / (float)outputRate;
+	const float outputTimeEnd = inputTimeEnd;
+	cl_float* outputTimeValues = tools::IncrementalArrayGenerator_ByStep(0.0f, outputTimeEnd, outputTimeStep);
+
+	// perform PolyEval to get new values
+	cl_float* outputData = PolyEval(coeffs, order, outputTimeValues, sampleCount);
+
+	free(signalData);
+	free(inputTimes);
+	free(matrixA);
+	free(R);
+	free(Q);
+	free(Qtb);
+	free(outputTimeValues);
+
+	return outputData;
+}
+
+int Test_Resample(ResultsStruct* results)
+{
+	std::cout << "Test Resample: " << std::endl;
+	const std::string inputFile = "..\\data\\test_resample_input_signal.csv";
+	size_t inputRate = 100;
+	size_t outputRate = 50;
+	size_t order = 6;
+	cl_float* coeffs = NULL;
+	cl_float* resampledData = Resample(inputFile, inputRate, outputRate, order, coeffs);
+
+	// Load And Verify Expected Coefficients Results
+	std::cout << "Verify Coefficients Match: ";
+	{
+		const std::string coeffsFile = "..\\data\\test_resample_coeffs.csv";
+		size_t coeffsRows = 0;
+		size_t coeffsCols = 0;
+		cl_float* expectedCoeffs = tools::LoadDataFile(coeffsFile, &coeffsRows, &coeffsCols);
+		if (!expectedCoeffs)
+		{
+			std::cout << "FAILED to read data file: " << coeffsFile.c_str();
+			return -1;
+		}
+		if (coeffsRows != order + 1)
+		{
+			std::cout << "FAIL: coefficient count does not match" << std::endl;
+			free(expectedCoeffs);
+			return -1;
+		}
+		if (!tools::isEqual<float>(coeffs, expectedCoeffs, order + 1))
+		{
+			std::cout << "FAIL: coefficients do not match" << std::endl;
+			std::cout << "EXPECTED: ";
+			tools::printMatrix<float>(expectedCoeffs, order + 1, 1);
+			std::cout << "ACTUAL: ";
+			tools::printMatrix<float>(coeffs, order + 1, 1);
+			free(expectedCoeffs);
+			return -1;
+		}
+		else
+			std::cout << "SUCCESS: Coefficients Match" << std::endl;
+		free(expectedCoeffs);
+	}
+
+	// Load And Verify Signal Output Results
+	std::cout << "Verify Resample Results Match: ";
+	{
+		const std::string outputFile = "..\\data\\test_resample_output_signal.csv";
+		size_t outputRows = 0;
+		size_t outputCols = 0;
+		cl_float* expectedOutput = tools::LoadDataFile(outputFile, &outputRows, &outputCols);
+		if (!expectedOutput)
+		{
+			std::cout << "FAILED to read data file: " << outputFile.c_str();
+			return -1;
+		}
+		if (outputRows != 1)
+		{
+			std::cout << "FAIL: output data count does not match" << std::endl;
+			free(expectedOutput);
+			return -1;
+		}
+		const size_t outputSampleCount = outputRows;
+		if (!tools::isEqual<float>(resampledData, expectedOutput, outputSampleCount))
+		{
+			std::cout << "FAIL: coefficients do not match" << std::endl;
+			std::cout << "EXPECTED: ";
+			tools::printMatrix<float>(expectedOutput, outputSampleCount, 1);
+			std::cout << "ACTUAL: ";
+			tools::printMatrix<float>(resampledData, outputSampleCount, 1);
+			free(expectedOutput);
+			return -1;
+		}
+		else
+			std::cout << "SUCCESS: Resampled Data Matches" << std::endl;
+		free(expectedOutput);
+	}
+
+	free(coeffs);
+	free(resampledData);
+
+	return 0;
+}
+
+
 // Calculate Q and R matrixes for QR Decomposition of matrix
-void QR(cl_float* R, cl_float* Q, cl_uint arrayWidth, cl_uint arrayHeight)
+void QR(cl_float* R, cl_float* Q, size_t arrayWidth, size_t arrayHeight)
 {
 	cl_float a;
 	cl_float b;
@@ -64,26 +209,22 @@ int Test_QR(ResultsStruct* results)
 	const size_t arrayWidth = 3;
 	const size_t arrayHeight = 5;
 
-	float* A = (float*)malloc(sizeof(float)*arrayWidth*arrayHeight);
+	float A[] = { 1.000000f, 0.000000f,  0.000000f,
+				  1.000000f, 1.000000f,  1.000000f,
+				  1.000000f, 2.000000f,  4.000000f,
+				  1.000000f, 3.000000f,  9.000000f,
+				  1.000000f, 4.000000f, 16.000000f };
 
-
-	float Atmp[] = { 1.000000, 0.000000,  0.000000,
-					 1.000000, 1.000000,  1.000000,
-					 1.000000, 2.000000,  4.000000,
-					 1.000000, 3.000000,  9.000000,
-					 1.000000, 4.000000, 16.000000 };
-
-	// Initialize A
-	for (size_t i = 0; i < arrayWidth * arrayHeight; ++i)
-		A[i] = Atmp[i];
+	// Initialize R
+	float* R = tools::CopyMatrix(A, 5, 3);
 
 	// Initialize Q
-	float* Q = tools::CreateIdentityMatrix(arrayHeight); // allocates space too
+	float* Q = tools::CreateIdentityMatrix(arrayHeight);
 
 	// Perform QR Decomposition
 	ProfilerStruct profiler;
 	profiler.Start();
-	QR(A, Q, arrayWidth, arrayHeight);
+	QR(R, Q, arrayWidth, arrayHeight);
 	profiler.Stop();
 	float runTime = profiler.Log();
 
@@ -99,27 +240,26 @@ int Test_QR(ResultsStruct* results)
 						 -0.44721f,  0.31623f,  0.26726f, -0.42258f,  0.67082f,
 						  0.44721f, -0.63246f,  0.53452f, -0.25355f,  0.22361f};
 	bool failed = false;
-	if (!tools::isEqual<float>(A, RExpected, arrayWidth*arrayHeight))
+	if (!tools::isEqual<float>(R, RExpected, arrayWidth*arrayHeight))
 	{
 		std::cout << "FAIL" << std::endl;
 
 		std::cout << "A: " << std::endl;
-		tools::printMatrix<float>(Atmp, arrayHeight, arrayWidth);
-		std::cout << "EXPECTED R: " << std::endl;
 		tools::printMatrix<float>(A, arrayHeight, arrayWidth);
+		std::cout << "EXPECTED R: " << std::endl;
+		tools::printMatrix<float>(R, arrayHeight, arrayWidth);
 		std::cout << "ACTUAL R: " << std::endl;
 		tools::printMatrix<float>(RExpected, arrayHeight, arrayWidth);
 
 		failed = true;
 	}
-	float* QTranspose = (float*)malloc(sizeof(float)*arrayHeight*arrayHeight);
-	tools::TransposeMatrix(Q, arrayHeight, arrayHeight, QTranspose);
+	float* QTranspose = tools::TransposeMatrix(Q, arrayHeight, arrayHeight);
 	if(!tools::isEqual<float>(QTranspose, QExpected, arrayHeight*arrayHeight))
 	{
 		std::cout << "FAIL" << std::endl;
 
 		std::cout << "A: " << std::endl;
-		tools::printMatrix<float>(Atmp, arrayHeight, arrayWidth);
+		tools::printMatrix<float>(A, arrayHeight, arrayWidth);
 		std::cout << "EXPECTED Q: " << std::endl;
 		tools::printMatrix<float>(QExpected, arrayHeight, arrayHeight);
 		std::cout << "ACTUAL Q: " << std::endl;
@@ -131,8 +271,8 @@ int Test_QR(ResultsStruct* results)
 		std::cout << "SUCCESS" << std::endl;
 
 	free(QTranspose);
-	free(A);
 	free(Q);
+	free(R);
 
 	results->WindowsRunTime = (double)runTime;
 	results->HasWindowsRunTime = true;
@@ -146,11 +286,16 @@ int Test_QR(ResultsStruct* results)
 // @param[in] R upper triangular matrix of size MxN (from QR Decomposition)
 // @param[in] Qtb Q*b column vector of size Mx1
 // @param[in] Dim coefficients to solve for - should match N columns size of R
-// @param[out] Result is where x is stored
-void BackSub(cl_float* R, cl_float* Qtb, size_t Dim, cl_float* Result)
+// @return coefficients vector
+// NOTE: CALLER TAKES OWNERSHIP OF RETURN VALUE
+cl_float* BackSub(cl_float* R, cl_float* Qtb, size_t Dim)
 {
 	if (!R || !Qtb || Dim == 0)
-		return;
+		return NULL;
+
+	cl_float* result = (cl_float*)malloc(sizeof(cl_float)*Dim);
+	for (size_t i = 0; i < Dim; ++i)
+		result[i] = 0.0f;
 
 	// Start at the Nth row in the right-triangular matrix R where we effectively have R[n][n] * x[n] = Qtb[n]
 	// Work our way up solving for each x[n] value in reverse, allowing us to solve for each row as we work our way up
@@ -162,12 +307,12 @@ void BackSub(cl_float* R, cl_float* Qtb, size_t Dim, cl_float* Result)
 		// sum up product of remaining row of R with known x values
 		cl_float subtractSum = 0;
 		for (size_t sumIdx = resultIdx + 1; sumIdx < Dim; sumIdx++)
-			subtractSum += R[RRowStartIdx + sumIdx] * Result[sumIdx];
+			subtractSum += R[RRowStartIdx + sumIdx] * result[sumIdx];
 
 		// calculate final result eg: if ax + b = c, then x = (c-b)/a
-		if(Result)
-			Result[resultIdx] = (Qtb[resultIdx] - subtractSum) / R[RRowStartIdx + resultIdx];
+		result[resultIdx] = (Qtb[resultIdx] - subtractSum) / R[RRowStartIdx + resultIdx];
 	}
+	return result;
 }
 
 // Tests BackSub
@@ -181,10 +326,9 @@ int Test_BackSub(ResultsStruct* results)
 		float R[] = { 1, -2,  1,
 					  0,  1,  6,
 					  0,  0,  1 };
-		float Result[cols];
 		float Expected[] = { -24, -13, 2 };
 
-		BackSub(R, Qtb, cols, Result);
+		float* Result = BackSub(R, Qtb, cols);
 		if (tools::isEqual<float>(Result, Expected, cols))
 		{
 			std::cout << "SUCCESS!" << std::endl;
@@ -207,10 +351,10 @@ int Test_BackSub(ResultsStruct* results)
 					  0.041129f,   0.496991f,   0.221390f,   0.170497f,   0.844328f,
 					  0.814968f,   0.691170f,   0.545236f,   0.780255f,   0.518466f,
 					  0.863745f,   0.461225f,   0.834668f,   0.176055f,   0.305269f };
-		float Result[cols];
+
 		float Expected[] = { -1.46197f, 2.4261f, -6.87383f, -0.47603f, 2.34757f };
 
-		BackSub(R, Qtb, cols, Result);
+		float* Result = BackSub(R, Qtb, cols);
 		if (tools::isEqual<float>(Result, Expected, cols))
 		{
 			std::cout << "SUCCESS!" << std::endl;
@@ -232,9 +376,16 @@ int Test_BackSub(ResultsStruct* results)
 // @param[in] order order of the polynomial
 // @param[in] input array of input values
 // @param[in] numSamples number of input values
-// @param[out] output array of calculated values
-void PolyEval(cl_float* coeffs, size_t order, cl_float* input, size_t numSamples, cl_float* output)
+// @return output array of calculated values
+cl_float* PolyEval(cl_float* coeffs, size_t order, cl_float* input, size_t numSamples)
 {
+	if (!coeffs || !order || !input || !numSamples)
+		return NULL;
+
+	cl_float* output = (cl_float*)malloc(sizeof(cl_float)*numSamples);
+	for (size_t i = 0; i < numSamples; ++i)
+		output[i] = 0.0f;
+
 	// for each data point
 	for (size_t valIdx = 0; valIdx < numSamples; ++valIdx)
 	{
@@ -243,6 +394,7 @@ void PolyEval(cl_float* coeffs, size_t order, cl_float* input, size_t numSamples
 		for (size_t coef = 0; coef <= order; ++coef)
 			output[valIdx] += coeffs[coef] * (float)pow(input[valIdx], coef);
 	}
+	return output;
 }
 
 // Tests PolyEval
@@ -256,11 +408,9 @@ int Test_PolyEval(ResultsStruct* results)
 
 		float input[] = { 0, 1, 2, 3, 4, 5 };
 		const size_t numSamples = 6;
-
-		float Result[numSamples];
 		float Expected[] = { 1, 3, 7, 13, 21, 31 };
 
-		PolyEval(coeffs, order, input, numSamples, Result);
+		float* Result = PolyEval(coeffs, order, input, numSamples);
 		if (tools::isEqual<float>(Result, Expected, numSamples))
 		{
 			std::cout << "SUCCESS!" << std::endl;
@@ -273,6 +423,7 @@ int Test_PolyEval(ResultsStruct* results)
 			std::cout << "Actual: " << std::endl;
 			tools::printArray<float>(Result, numSamples);
 		}
+		free(Result);
 	}
 	std::cout << std::endl << "Simple Test 2: ";
 	{
@@ -282,9 +433,8 @@ int Test_PolyEval(ResultsStruct* results)
 		float input[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 		const size_t numSamples = 10;
 
-		float Result[numSamples];
 		float Expected[] = { 36, 1793, 24604, 167481, 756836, 2620201, 7526268, 18831568, 42374116, 87654320 };
-		PolyEval(coeffs, order, input, numSamples, Result);
+		float* Result = PolyEval(coeffs, order, input, numSamples);
 		if (tools::isEqual<float>(Result, Expected, numSamples))
 		{
 			std::cout << "SUCCESS!" << std::endl;
@@ -297,6 +447,7 @@ int Test_PolyEval(ResultsStruct* results)
 			std::cout << "Actual: " << std::endl;
 			tools::printArray<float>(Result, numSamples);
 		}
+		free(Result);
 	}
 
 	return 0;

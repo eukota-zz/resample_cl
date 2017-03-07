@@ -40,7 +40,7 @@ std::map<int, ProblemGroup*> ControlClass::GroupFactory()
 	size_t idx = InputControl->problems_.size();
 	InputControl->problems_[++idx] = new Problem(&SetInputDataFile, "Set the file path to read sample data from.");
 	InputControl->problems_[++idx] = new Problem(&SetSampleRates, "Set the input and output sample rates.");
-	InputControl->problems_[++idx] = new Problem(&Test_LoadSampleData, "Read and print sample data.");
+	InputControl->problems_[++idx] = new Problem(&Test_LoadDataFile, "Read and print sample data.");
 	pgs[InputControl->GroupNum()] = InputControl;
 
 	idx = 0; // reset counter
@@ -51,44 +51,13 @@ std::map<int, ProblemGroup*> ControlClass::GroupFactory()
 	projectFuncs->problems_[++idx] = new Problem(&Test_BackSub, "Test Back Substitution Function");
 	projectFuncs->problems_[++idx] = new Problem(&Test_CreateIdentityMatrix, "Test Create Identity Matrix Function");
 	projectFuncs->problems_[++idx] = new Problem(&Test_SignalGenerator, "Test Signal Generator Function");
-	projectFuncs->problems_[++idx] = new Problem(&Test_AMatrixGenerator, "Test AMatrix Generator Function");
+	projectFuncs->problems_[++idx] = new Problem(&Test_TransposeMatrix, "Test Transpose Matrix Function");
+	projectFuncs->problems_[++idx] = new Problem(&Test_GenerateAMatrix, "Test Generator A Matrix Function");
+	projectFuncs->problems_[++idx] = new Problem(&Test_CopyMatrix, "Test Copy Matrix Function");
 	projectFuncs->problems_[++idx] = new Problem(&Test_MatrixMultiplier, "Test Matrix Mutlipication Function");
+	projectFuncs->problems_[++idx] = new Problem(&Test_Resample, "Test Complete Resample Function");
 	pgs[projectFuncs->GroupNum()] = projectFuncs;
 	return pgs;
-}
-
-// Attempts to read sample input data from provided data file
-// Expects to find one amplitude value per line
-// @return the number of data points read
-int ControlClass::LoadSampleData(bool printPoints)
-{
-	// With help from:
-	//http://stackoverflow.com/questions/12774207/fastest-way-to-check-if-a-file-exist-using-standard-c-c11-c
-	std::ifstream f(ControlObject->sample_data_input_file_.c_str());
-	if (!f.good())
-		return -1;
-	int pointCount = 0;
-	std::filebuf fb;
-	std::vector<float> points;
-	if (fb.open(ControlObject->sample_data_input_file_, std::ios::in))
-	{
-		std::istream is(&fb);
-		char point[256];
-		while (is.getline(point, 256))
-			points.push_back(std::stof(point));
-		fb.close();
-	}
-	if (printPoints)
-		std::cout << "Read Points: " << std::endl;
-	sample_data_ = (float*)malloc(sizeof(float*)*points.size());
-	for (size_t i = 0; i < points.size(); ++i)
-	{
-		sample_data_[i] = points[i];
-		if(printPoints)
-			std::cout << i << ": " << points[i] << std::endl;
-	}
-
-	return (int)points.size();
 }
 
 // Set the Input and Output sample rates
@@ -115,16 +84,5 @@ int SetInputDataFile(ResultsStruct* results)
 		return -1;
 	}
 	return 0;
-}
-
-// Reads sample data and prints it to the screen
-// Uses LoadSampleData() function with optional print bool set to true
-int Test_LoadSampleData(ResultsStruct* results)
-{
-	// returns number of loaded
-	bool printPoints = true; // for test purposes
-	size_t loadCount = ControlObject->LoadSampleData(printPoints);
-	std::cout << "Points Loaded: " << loadCount << std::endl;
-	return (loadCount >= 0 ? 0 : -1);
 }
 

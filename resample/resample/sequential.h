@@ -1,17 +1,22 @@
 #pragma once
+#include <string>
 #include "CL/cl.h"
 
 // Forward Declarations
 struct ResultsStruct;
 
-// Back Substitution
-void BackSub(cl_float* R, cl_float* Qtb, size_t Dim, cl_float* Result);
-int Test_BackSub(ResultsStruct* results);
+// Resample
+cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t outputRate, size_t order, cl_float* coeffs);
+int Test_Resample(ResultsStruct* results);
 
 // QR Decomposition
-void QR(cl_float* R, cl_float* Q, cl_uint arrayWidth, cl_uint arrayHeight);
+void QR(cl_float* R, cl_float* Q, size_t arrayWidth, size_t arrayHeight);
 int Test_QR(ResultsStruct* results);
 
+// Back Substitution
+cl_float* BackSub(cl_float* R, cl_float* Qtb, size_t Dim);
+int Test_BackSub(ResultsStruct* results);
+
 // Polynomial Evaluation
-void PolyEval(cl_float* coeffs, size_t order, cl_float* input, size_t numSamples, cl_float* output);
+cl_float* PolyEval(cl_float* coeffs, size_t order, cl_float* input, size_t numSamples);
 int Test_PolyEval(ResultsStruct* results);

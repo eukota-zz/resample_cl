@@ -77,16 +77,21 @@ namespace tools
 	}
 
 	float* CreateIdentityMatrix(size_t size);
-	void TransposeMatrix(float* input, size_t rows, size_t cols, float* output);
+	float* TransposeMatrix(float* input, size_t rows, size_t cols);
+	float* CopyMatrix(float* matrix, size_t rows, size_t cols);
 	float* MatrixMultiplier(float* matrixA, size_t rowsA, size_t colsA, float* matrixB, size_t rowsB, size_t colsB);
 	float* IncrementalArrayGenerator_ByStep(float start, float end, float stepVal);
 	float* IncrementalArrayGenerator_BySize(float start, float stepVal, size_t sampleCount);
-	float* AMatrixGenerator(float* input, size_t numSamples, size_t order);
+	float* GenerateAMatrix(float* input, size_t numSamples, size_t order);
 	void SignalGenerator(float sampleRate, float freq, float noiseLevel, size_t numSamples, float* resReal, float* resImag);
+	float* LoadDataFile(const std::string& file, size_t* rows, size_t* cols);
 }
 
 struct ResultsStruct;
 int Test_CreateIdentityMatrix(ResultsStruct* results);
 int Test_SignalGenerator(ResultsStruct* results);
-int Test_AMatrixGenerator(ResultsStruct* results);
+int Test_TransposeMatrix(ResultsStruct* results);
+int Test_GenerateAMatrix(ResultsStruct* results);
+int Test_CopyMatrix(ResultsStruct* results);
 int Test_MatrixMultiplier(ResultsStruct* results);
+int Test_LoadDataFile(ResultsStruct* results);
