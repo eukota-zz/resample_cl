@@ -14,12 +14,19 @@
 // @param[in] order polynomial order to use
 // @param[out] optional output paramater is coefficients of LSA polynomial
 // @return resampled data
-cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t outputRate, size_t order, cl_float* coeffs)
+cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t outputRate, size_t order, cl_float** coeffs, bool verbose)
 {
 	// Load Signal Data
 	size_t rows = 0;
 	size_t cols = 0;
 	float* signalData = tools::LoadDataFile(inputFile, &rows, &cols);
+	const std::string outputFile = "..\\data\\Resample_Verbose_Output.txt";
+	if (verbose)
+	{
+		tools::SaveDataFile("Resample Verbose Data Output\n", outputFile, false);
+		tools::SaveDataFile("Signal Input:\n", outputFile, true);
+		tools::SaveDataFile(signalData, rows, cols, outputFile, true);
+	}
 	if (cols > 1)
 	{
 		LogError("Resample signal data file has too many inputs");
@@ -32,30 +39,71 @@ cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t output
 	const float inputTimeStep = 1 / (float)inputRate;
 	const float inputTimeEnd = (float)sampleCount / (float)inputRate;
 	float* inputTimes = tools::IncrementalArrayGenerator_ByStep(0.0f, inputTimeEnd, inputTimeStep);
+	if (verbose)
+	{
+		tools::SaveDataFile("Input Times:\n", outputFile, true);
+		tools::SaveDataFile(inputTimes, sampleCount, 1, outputFile, true);
+	}
 
 	// create A matrix
 	float* matrixA = tools::GenerateAMatrix(inputTimes, sampleCount, order);
+	if (verbose)
+	{
+		tools::SaveDataFile("A Matrix:\n", outputFile, true);
+		tools::SaveDataFile(matrixA, sampleCount, order+1, outputFile, true);
+	}
 
 	// perform QR to get Q and R matrixes
 	cl_float* R = tools::CopyMatrix(matrixA, sampleCount, order + 1);
 	cl_float* Q = tools::CreateIdentityMatrix(sampleCount);
 	QR(R, Q, order+1, sampleCount);
+	if (verbose)
+	{
+		tools::SaveDataFile("R:\n", outputFile, true);
+		tools::SaveDataFile(R, sampleCount, order + 1, outputFile, true);
+	}
+	if (verbose)
+	{
+		tools::SaveDataFile("Q:\n", outputFile, true);
+		tools::SaveDataFile(Q, sampleCount, sampleCount, outputFile, true);
+	}
 
 	// multiply Q by signal input data to get Qtb
 	cl_float* Qtb = tools::MatrixMultiplier(Q, sampleCount, sampleCount, signalData, sampleCount, 1);
+	if (verbose)
+	{
+		tools::SaveDataFile("Qtb:\n", outputFile, true);
+		tools::SaveDataFile(Qtb, sampleCount, 1, outputFile, true);
+	}
 
 	// perform BackSub to get coefficients
-	if (coeffs)
-		free(coeffs);
-	coeffs = BackSub(R, Qtb, order+1);
+	cl_float* coeffsCalculated = BackSub(R, Qtb, order+1);
+	if (verbose)
+	{
+		tools::SaveDataFile("Coeffs:\n", outputFile, true);
+		tools::SaveDataFile(coeffsCalculated, order+1, 1, outputFile, true);
+	}
 
 	// Generate output sample times to evaulate at
 	const float outputTimeStep = 1.0f / (float)outputRate;
 	const float outputTimeEnd = inputTimeEnd;
+	const size_t outputSampleSize = (size_t)(outputTimeEnd * outputRate);
 	cl_float* outputTimeValues = tools::IncrementalArrayGenerator_ByStep(0.0f, outputTimeEnd, outputTimeStep);
+	if (verbose)
+	{
+		tools::SaveDataFile("Output Time Values:\n", outputFile, true);
+		tools::SaveDataFile(outputTimeValues, outputSampleSize, 1, outputFile, true);
+	}
 
 	// perform PolyEval to get new values
-	cl_float* outputData = PolyEval(coeffs, order, outputTimeValues, sampleCount);
+	cl_float* outputData = PolyEval(coeffsCalculated, order, outputTimeValues, outputSampleSize);
+	if (verbose)
+	{
+		tools::SaveDataFile("Polynomial Evaluations:\n", outputFile, true);
+		tools::SaveDataFile(outputData, outputSampleSize, 1, outputFile, true);
+	}
+
+	*coeffs = tools::CopyMatrix(coeffsCalculated, order + 1, 1);
 
 	free(signalData);
 	free(inputTimes);
@@ -64,6 +112,7 @@ cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t output
 	free(Q);
 	free(Qtb);
 	free(outputTimeValues);
+	free(coeffsCalculated);
 
 	return outputData;
 }
@@ -71,17 +120,21 @@ cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t output
 int Test_Resample(ResultsStruct* results)
 {
 	std::cout << "Test Resample: " << std::endl;
-	const std::string inputFile = "..\\data\\test_resample_input_signal.csv";
+	//const std::string inputFile = "..\\data\\test_resample_input_signal.csv";
+	const std::string inputFile = "..\\data\\test_resample_200_input_signal.csv";
 	size_t inputRate = 100;
 	size_t outputRate = 50;
-	size_t order = 6;
+	size_t order = 7;
 	cl_float* coeffs = NULL;
-	cl_float* resampledData = Resample(inputFile, inputRate, outputRate, order, coeffs);
+	const bool verbose = true; // force printing everything
+	cl_float* resampledData = Resample(inputFile, inputRate, outputRate, order, &coeffs, verbose);
+	bool failed = false;
 
 	// Load And Verify Expected Coefficients Results
 	std::cout << "Verify Coefficients Match: ";
 	{
-		const std::string coeffsFile = "..\\data\\test_resample_coeffs.csv";
+		//const std::string coeffsFile = "..\\data\\test_resample_coeffs.csv";
+		const std::string coeffsFile = "..\\data\\test_resample_200_coeffs.csv";
 		size_t coeffsRows = 0;
 		size_t coeffsCols = 0;
 		cl_float* expectedCoeffs = tools::LoadDataFile(coeffsFile, &coeffsRows, &coeffsCols);
@@ -99,12 +152,11 @@ int Test_Resample(ResultsStruct* results)
 		if (!tools::isEqual<float>(coeffs, expectedCoeffs, order + 1))
 		{
 			std::cout << "FAIL: coefficients do not match" << std::endl;
-			std::cout << "EXPECTED: ";
+			std::cout << "EXPECTED: " << std::endl;
 			tools::printMatrix<float>(expectedCoeffs, order + 1, 1);
-			std::cout << "ACTUAL: ";
+			std::cout << "ACTUAL: " << std::endl;
 			tools::printMatrix<float>(coeffs, order + 1, 1);
-			free(expectedCoeffs);
-			return -1;
+			failed = true;
 		}
 		else
 			std::cout << "SUCCESS: Coefficients Match" << std::endl;
@@ -114,7 +166,8 @@ int Test_Resample(ResultsStruct* results)
 	// Load And Verify Signal Output Results
 	std::cout << "Verify Resample Results Match: ";
 	{
-		const std::string outputFile = "..\\data\\test_resample_output_signal.csv";
+		//const std::string outputFile = "..\\data\\test_resample_output_signal.csv";
+		const std::string outputFile = "..\\data\\test_resample_200_output_signal.csv";
 		size_t outputRows = 0;
 		size_t outputCols = 0;
 		cl_float* expectedOutput = tools::LoadDataFile(outputFile, &outputRows, &outputCols);
@@ -123,7 +176,7 @@ int Test_Resample(ResultsStruct* results)
 			std::cout << "FAILED to read data file: " << outputFile.c_str();
 			return -1;
 		}
-		if (outputRows != 1)
+		if (outputCols != 1)
 		{
 			std::cout << "FAIL: output data count does not match" << std::endl;
 			free(expectedOutput);
@@ -133,12 +186,11 @@ int Test_Resample(ResultsStruct* results)
 		if (!tools::isEqual<float>(resampledData, expectedOutput, outputSampleCount))
 		{
 			std::cout << "FAIL: coefficients do not match" << std::endl;
-			std::cout << "EXPECTED: ";
+			std::cout << "EXPECTED: " << std::endl;
 			tools::printMatrix<float>(expectedOutput, outputSampleCount, 1);
-			std::cout << "ACTUAL: ";
+			std::cout << "ACTUAL: " << std::endl;
 			tools::printMatrix<float>(resampledData, outputSampleCount, 1);
-			free(expectedOutput);
-			return -1;
+			failed = true;
 		}
 		else
 			std::cout << "SUCCESS: Resampled Data Matches" << std::endl;
@@ -148,7 +200,7 @@ int Test_Resample(ResultsStruct* results)
 	free(coeffs);
 	free(resampledData);
 
-	return 0;
+	return failed ? -1 : 0;
 }
 
 

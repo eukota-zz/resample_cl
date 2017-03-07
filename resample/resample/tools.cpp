@@ -138,9 +138,10 @@ namespace tools
 	// @param[in] stepVal value to step by
 	// @return resulting generated points - Caller is responsible for freeing memory
 	// NOTE: CALLER TAKES OWNERSHIP OF RETURN VALUE
+	/// @TODO REWRITE SO WE PROVIDE OUTPARAM OF SAMPLE COUNT
 	float* IncrementalArrayGenerator_ByStep(float start, float end, float stepVal)
 	{
-		if (stepVal <= 0 || start-end < stepVal)
+		if (stepVal <= 0 || end-start < stepVal)
 			return NULL;
 
 		const size_t sampleCount = (size_t)((end - start) / stepVal);
@@ -246,6 +247,50 @@ namespace tools
 		if (cols)
 			*cols = width;
 		return data;
+	}
+
+	bool SaveDataFile(const std::string& data, const std::string& filePath, bool append)
+	{
+		if (data.empty())
+			return false;
+
+		std::ofstream outfile;
+		if (append)
+			outfile.open(filePath.c_str(), std::ofstream::out | std::ios_base::app);
+		else
+			outfile.open(filePath.c_str(), std::ofstream::out);
+		if (!outfile.is_open())
+			return false;
+
+		outfile << data;
+		return true;
+	}
+
+	bool SaveDataFile(float* data, size_t rows, size_t cols, const std::string& filePath, bool append)
+	{
+		if (!data || !rows || !cols)
+			return false;
+
+		std::ofstream outfile;
+		if (append)
+			outfile.open(filePath.c_str(), std::ofstream::out | std::ios_base::app);
+		else
+			outfile.open(filePath.c_str(), std::ofstream::out); 
+		if (!outfile.is_open())
+			return false;
+
+		for (size_t row = 0; row < rows; ++row)
+		{
+			for (size_t col = 0; col < cols; ++col)
+			{
+				const size_t idx = row*cols + col;
+				outfile << data[idx];
+				if (idx%cols != cols - 1)
+					outfile << ",";
+			}
+			outfile << std::endl;
+		}
+		return true;
 	}
 
 }

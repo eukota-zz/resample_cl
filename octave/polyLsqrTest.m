@@ -1,26 +1,44 @@
 % Script that calls the polynomial least squares function
+% Writes out results to files used by C++ Test Function
 
 clear all
 close all
 clc
 
-%x = [-5,-4,-3,-2,-1,0,1,2,3,4,5];
-%y = 5+8*x+3*x.^2+2*x.^3 + 0*rand(1,numel(x));
-x = [1,2,3,4];
-y = [6,5,7,10];
-k = 2;
+y=csvread("..\\resample\\data\\test_resample_input_signal.csv");
+sampleCountIn = numel(y);
 
-% todo: (x) function to take sampleRate and numPoints - should return vector of time points
-% todo: (y) function generating sample data - should return vector of sample amplitudes
+% reduce input size since octave chokes on large inputs
+sampleCountIn = 200;
+y=y(1:sampleCountIn)';
 
-coeffs = polyLsqr(x, y, k);
-sampleRate = 1;
+% Input
+sampleRateIn = 100;
+timeStepIn = 1/sampleRateIn;
+endTimeIn = timeStepIn*sampleCountIn;
+xIn=timeStepIn:timeStepIn:endTimeIn;
+xIn=xIn';
+
+% Output
+sampleRateOut = 50;
+timeStepOut = 1/sampleRateOut;
+endTimeOut = endTimeIn; 
+xOut=timeStepOut:timeStepOut:endTimeOut;
+sampleCountOut = endTimeOut*sampleRateOut;
+
+% solve for coefficients
+k = 7;
+coeffs = polyLsqr(xIn, y, k);
 order = k;
-numPoints = numel(x);
-polyEval(coeffs,sampleRate,order,numPoints)
+fit = polyEval(coeffs,sampleRateOut,order,sampleCountOut-1);
 
+% plot figure
 figure
-plot(x,y,'o',x,fit,'.-')
+plot(xIn,y,'o',xOut,fit,'.-')
 legend('data','polynomial fit')
 
-coeffs
+% save data
+csvwrite('..\resample\data\test_resample_200_input_signal.csv',y');
+csvwrite('..\resample\data\test_resample_200_coeffs.csv',coeffs);
+csvwrite('..\resample\data\test_resample_200_output_signal.csv',fit');
+  

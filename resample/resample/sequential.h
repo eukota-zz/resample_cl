@@ -6,7 +6,7 @@
 struct ResultsStruct;
 
 // Resample
-cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t outputRate, size_t order, cl_float* coeffs);
+cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t outputRate, size_t order, cl_float** coeffs, bool verbose = false);
 int Test_Resample(ResultsStruct* results);
 
 // QR Decomposition

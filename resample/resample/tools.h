@@ -84,7 +84,10 @@ namespace tools
 	float* IncrementalArrayGenerator_BySize(float start, float stepVal, size_t sampleCount);
 	float* GenerateAMatrix(float* input, size_t numSamples, size_t order);
 	void SignalGenerator(float sampleRate, float freq, float noiseLevel, size_t numSamples, float* resReal, float* resImag);
+	
 	float* LoadDataFile(const std::string& file, size_t* rows, size_t* cols);
+	bool SaveDataFile(const std::string& data, const std::string& filePath, bool append);
+	bool SaveDataFile(float* data, size_t rows, size_t cols, const std::string& filePath, bool append = false);
 }
 
 struct ResultsStruct;
