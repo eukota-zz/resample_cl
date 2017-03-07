@@ -78,16 +78,14 @@ namespace tools
 
 	void CreateIdentityMatrix(size_t size, float* output);
 	void TransposeMatrix(float* input, size_t rows, size_t cols, float* output);
-	void MatrixByColumnVector(float* matrix, float* columnVector, size_t size, float* output);
-
+	float* MatrixMultiplier(float* matrixA, size_t rowsA, size_t colsA, float* matrixB, size_t rowsB, size_t colsB);
 	float* IncrementalArrayGenerator_ByStep(float start, float end, float stepVal);
 	float* IncrementalArrayGenerator_BySize(float start, float stepVal, size_t sampleCount);
 	float* AMatrixGenerator(float* input, size_t numSamples, size_t order);
 	void SignalGenerator(float sampleRate, float freq, float noiseLevel, size_t numSamples, float* resReal, float* resImag);
-
 }
 
 struct ResultsStruct;
 int Test_SignalGenerator(ResultsStruct* results);
 int Test_AMatrixGenerator(ResultsStruct* results);
-int Test_MatrixByColumnVector(ResultsStruct* results);
+int Test_MatrixMultiplier(ResultsStruct* results);

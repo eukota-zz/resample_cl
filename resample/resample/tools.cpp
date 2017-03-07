@@ -1,8 +1,9 @@
 #include <string>
 #include <iostream>
 #include <vector>
-
 #include "tools.h"
+
+#include "utils.h"
 
 namespace tools
 {
@@ -49,22 +50,43 @@ namespace tools
 		}
 	}
 
-	// Multiplies matrix by columnVector and puts result in output
-	// @param[in] matrix matrix of size NxN
-	// @param[in] columnVector array of size Nx1
-	// @param[in] size value for N
-	// @param[out] output results
-	void MatrixByColumnVector(float* matrix, float* columnVector, size_t size, float* output)
+	// Multiplies two matrices together [A]*[B] where A is MxN and B is NxL
+	// @param[in] matrixA left matrix
+	// @param[in] rowsA number of rows of A (M)
+	// @param[in] colsA number of columns of A (N)
+	// @param[in] matrixB right matrix
+	// @param[in] rowsB number of rows ob B (N - must match colsA)
+	// @param[in] colsB number of columns of B (L)
+	// @return output result
+	// NOTE: CALLER TAKES OWNERSHIP OF RETURN VALUE
+	float* MatrixMultiplier(float* matrixA, size_t rowsA, size_t colsA, float* matrixB, size_t rowsB, size_t colsB)
 	{
-		if (!matrix || !columnVector || !size || !output)
-			return;
-
-		for (size_t i = 0; i < size; ++i)
+		if (!matrixA || !rowsA || !colsA || !matrixB || !rowsB || !colsB)
 		{
-			output[i] = 0.0f;
-			for (size_t j = 0; j < size; ++j)
-				output[i] += matrix[i*size + j] * columnVector[j];
+			LogError("MatrixMultiplier called with invalid data.");
+			return NULL;
 		}
+		if (colsA != rowsB)
+		{
+			LogError("MatrixMultiplier called with unmatching sizes.");
+			return NULL;
+		}
+
+		const size_t height = rowsA;
+		const size_t width = colsB;
+		const size_t products = colsA; // number of products for each output cell
+		float* output = (float*)malloc(sizeof(float)*width*height);
+		for (size_t row = 0; row < height; ++row)
+		{
+			for (size_t col = 0; col < width; ++col)
+			{
+				const size_t idx = row*width + col;
+				output[idx] = 0.0f;
+				for (size_t innerIdx = 0; innerIdx < products; ++innerIdx)
+					output[idx] += matrixA[row*colsA + innerIdx] * matrixB[innerIdx*colsB + col];
+			}
+		}
+		return output;
 	}
 
 	// Creates Identity matrix of size size in output
@@ -92,6 +114,7 @@ namespace tools
 	// @param[in] end value to end at (is included in samples)
 	// @param[in] stepVal value to step by
 	// @return resulting generated points - Caller is responsible for freeing memory
+	// NOTE: CALLER TAKES OWNERSHIP OF RETURN VALUE
 	float* IncrementalArrayGenerator_ByStep(float start, float end, float stepVal)
 	{
 		if (stepVal <= 0 || start-end < stepVal)
@@ -117,6 +140,7 @@ namespace tools
 	// @param[in] numSamples number of samples to use (height of matrix)
 	// @param[in] order polynomial order (width of matrix - 1)
 	// @param[out] aMatirx the A matrix of size (numSamples)x(order+1)
+	// NOTE: CALLER TAKES OWNERSHIP OF RETURN VALUE
 	float* AMatrixGenerator(float* input, size_t numSamples, size_t order)
 	{
 		if (!input || !numSamples || !order)
@@ -280,26 +304,87 @@ int Test_SignalGenerator(ResultsStruct* results)
 	return 0;
 }
 
-// Tests MatrixByColumnVector
-int Test_MatrixByColumnVector(ResultsStruct* results)
+// Tests MatrixMultiplier
+int Test_MatrixMultiplier(ResultsStruct* results) 
 {
-	float matrix[] = { 1,2,3,
-					   4,5,6,
-					   7,8,9 };
-	float columnVector[] = { 1, 2, 3 };
-	float output[3];
-	tools::MatrixByColumnVector(matrix, columnVector, 3, output);
+	std::cout << "Test Matrix Multiply: ";
+	{
+		float matrixA[] = { 1.0f, 2.0f, 3.0f,
+							4.0f, 5.0f, 6.0f };
+		const size_t rowsA = 2;
+		const size_t colsA = 3;
+		float matrixB[] = { 1.0f, 2.0f,
+							3.0f, 4.0f,
+							5.0f, 6.0f };
+		const size_t rowsB = 3;
+		const size_t colsB = 2;
+		float* output = tools::MatrixMultiplier(matrixA, rowsA, colsA, matrixB, rowsB, colsB);
 
-	std::cout << "Matrix: " << std::endl;
-	tools::printMatrix<float>(matrix, 3, 3);
-	std::cout << std::endl;
-	std::cout << "Vector: " << std::endl;
-	tools::printArray<float>(columnVector, 3, true);
-	std::cout << std::endl;
-	std::cout << "Matrix * Vector: " << std::endl;
-	tools::printArray<float>(output, 3, true);
-	/// @TODO update to pass or fail by comparing to expected results
+		float expected[] = { 22.00000f, 28.00000f,
+							 49.00000f, 64.00000f };
+
+		if (!tools::isEqual<float>(output, expected, rowsA*colsB))
+		{
+			std::cout << "FAIL" << std::endl;
+			std::cout << "Matrix A: " << std::endl;
+			tools::printMatrix<float>(matrixA, rowsA, colsA);
+			std::cout << std::endl;
+			std::cout << "Matrix B: " << std::endl;
+			tools::printMatrix<float>(matrixB, rowsB, colsB);
+			std::cout << std::endl;
+
+			std::cout << "EXPECTED PRODUCT: " << std::endl;
+			tools::printMatrix<float>(expected, rowsA, colsB);
+			std::cout << std::endl;
+			std::cout << "ACTUAL PRODUCT: " << std::endl;
+			tools::printMatrix<float>(output, rowsA, colsB);
+			std::cout << std::endl;
+		}
+		else
+			std::cout << "SUCCESS" << std::endl;
+
+		free(output);
+	}
+	std::cout << "Test Matrix by Column Vector: ";
+	{
+		float matrixA[] = { 1.0f, 2.0f, 3.0f,
+							4.0f, 5.0f, 6.0f,
+							7.0f, 8.0f, 9.0f };
+		const size_t rowsA = 3;
+		const size_t colsA = 3;
+		float matrixB[] = { 1.0f,
+							2.0f,
+							3.0f };
+		const size_t rowsB = 3;
+		const size_t colsB = 1;
+		float* output = tools::MatrixMultiplier(matrixA, rowsA, colsA, matrixB, rowsB, colsB);
+
+		float expected[] = { 14.0f,
+							 32.0f,
+							 50.0f };
+
+		if (!tools::isEqual<float>(output, expected, rowsA*colsB))
+		{
+			std::cout << "FAIL" << std::endl;
+			std::cout << "Matrix A: " << std::endl;
+			tools::printMatrix<float>(matrixA, rowsA, colsA);
+			std::cout << std::endl;
+			std::cout << "Matrix B: " << std::endl;
+			tools::printMatrix<float>(matrixB, rowsB, colsB);
+			std::cout << std::endl;
+
+			std::cout << "EXPECTED PRODUCT: " << std::endl;
+			tools::printMatrix<float>(expected, rowsA, colsB);
+			std::cout << std::endl;
+			std::cout << "ACTUAL PRODUCT: " << std::endl;
+			tools::printMatrix<float>(output, rowsA, colsB);
+			std::cout << std::endl;
+		}
+		else
+			std::cout << "SUCCESS" << std::endl;
+
+		free(output);
+	}
+
 	return 0;
 }
-
-
