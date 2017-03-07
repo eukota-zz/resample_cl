@@ -13,6 +13,8 @@ using namespace std;
 
 #define pi 3.141592654
 
+//#define debug
+
 /*// Solves for coefficients in equation R*x=Q*b where
 // R and Q are from QR Decomposition
 // x is desired coefficients
@@ -97,10 +99,10 @@ void QR(float* R, float* Qt, int arrayWidth, int arrayHeight)
 	float c;
 	float s;
 	float r;
-	float Rnew1[2048];
-	float Rnew2[2048];
-	float Qnew1[2048];
-	float Qnew2[2048];
+	float* Rnew1 = new float[arrayWidth];
+	float* Rnew2 = new float[arrayWidth];
+	float* Qnew1 = new float[arrayHeight];
+	float* Qnew2 = new float[arrayHeight];
 	int rowG;
 	int colG;
 	for (int j = 0; j < arrayWidth; j++)
@@ -140,6 +142,10 @@ void QR(float* R, float* Qt, int arrayWidth, int arrayHeight)
 			}
 		}
 	}
+	free(Rnew1);
+	free(Rnew2);
+	free(Qnew1);
+	free(Qnew2);
 }
 
 /*
@@ -160,8 +166,8 @@ void tGen(float inFs, float outFs, int k, int numSamples, float* tIn, float* tOu
 {
 	for (int i = 0; i < numSamples; i++)
 	{
-		tIn[i] = i;
-		tOut[i] = i * inFs / outFs;
+		tIn[i] = i / inFs;
+		tOut[i] = tIn[i] * inFs / outFs;
 	}
 
 	// Construct A matrix for use in QR decomposition
@@ -277,24 +283,26 @@ void resample(float inFs, float outFs, int numSamples, float* sigIn, float* sigO
 
 int main()
 {
-	float inFs = 1;
-	float outFs = 1;
+	float inFs = 100;
+	float outFs = 100;
+	float f = 0.05;
+	float noiseLevel = 0.2;
 
-	const int numSamples = 100;
-	const int k = 5; // Polynomial order
+	int numSamples = 2048;
+	int k = 7; // Polynomial order
 
-	float x[numSamples];
-	float sigIn[numSamples];
-	float sigTmp[numSamples];
-	float sigOut[numSamples];
+	float* x = new float[numSamples];
+	float* sigIn = new float[numSamples];
+	float* sigTmp = new float[numSamples];
+	float* sigOut = new float[numSamples];
 
-	float sig[numSamples];
-	float tIn[numSamples];
-	float tOut[numSamples];
-	float Qt[numSamples*numSamples];
-	float Qtb[numSamples];
-	float R[(k+1)*numSamples];
-	float coef[k+1];
+	float* sig = new float[numSamples];
+	float* tIn = new float[numSamples];
+	float* tOut = new float[numSamples];
+	float* Qt = new float[numSamples * numSamples];
+	float* Qtb = new float[numSamples];
+	float* R = new float[(k + 1) * numSamples];
+	float* coef = new float[k + 1];
 
 	// Initialize x
 	for (int i = 0; i < numSamples; i++)
@@ -310,7 +318,7 @@ int main()
 	}
 	
 	// Initialize sigIn
-	sigGen(10e6, 100e3, 0.2, numSamples, sigTmp, sigIn);
+	sigGen(inFs, f, noiseLevel, numSamples, sigTmp, sigIn);
 
 	// Initialize Qt and G
 	for (int i = 0; i < numSamples; i++)
@@ -350,6 +358,27 @@ int main()
 		outfile << tIn[i] << "," << sigIn[i] << "," << tOut[i] << "," << sigOut[i] << "\n";
 	}
 	outfile.close();
+
+	// Write coefficients to file
+	ofstream cfile;
+	cfile.open("coef.csv");
+	for (int i = 0; i < k + 1; i++)
+	{
+		cfile << coef[i] << "\n";
+	}
+	cfile.close();
+
+	free(x);
+	free(sigIn);
+	free(sigTmp);
+	free(sigOut);
+	free(sig);
+	free(tIn);
+	free(tOut);
+	free(Qt);
+	free(Qtb);
+	free(R);
+	free(coef);
 	
 	return 0;
 }
