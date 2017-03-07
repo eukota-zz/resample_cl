@@ -91,12 +91,14 @@ namespace tools
 
 	// Creates Identity matrix of size size in output
 	// @param[in] size size of the identity matrix
-	// @param[out] output identity matrix output
-	void CreateIdentityMatrix(size_t size, float* output)
+	// @return output identity matrix
+	// NOTE: CALLER TAKES OWNERSHIP OF RETURN VALUE
+	float* CreateIdentityMatrix(size_t size)
 	{
-		if (!output)
-			return;
+		if (!size)
+			return NULL;
 
+		float* output = (float*)malloc(sizeof(float)*size*size);
 		for (size_t i = 0; i < size; ++i)
 		{
 			for (size_t j = 0; j < size; ++j)
@@ -107,6 +109,7 @@ namespace tools
 					output[i*size + j] = 0.0f;
 			}
 		}
+		return output;
 	}
 
 	// Fills output with an array of values from start to end (inclusive) stepping by step
@@ -181,6 +184,47 @@ namespace tools
 }
 
 struct ResultsStruct; // forward declare
+
+// Test CreateIdentityMatrix
+int Test_CreateIdentityMatrix(ResultsStruct* results)
+{
+	std::cout << "Test Invalid Size: ";
+	{
+		const size_t size = 0;
+		float* eye = tools::CreateIdentityMatrix(size);
+		if (eye)
+		{
+			std::cout << "FAIL - Created Identity Matrix with size of 0?" << std::endl;
+			free(eye);
+		}
+		else
+			std::cout << "SUCCESS" << std::endl;
+	}
+	std::wcout << "Test Valid Size: ";
+	{
+		const size_t size = 3;
+		float* eye = tools::CreateIdentityMatrix(size);
+		if (!eye)
+		{
+			std::cout << "FAIL - no matrix returned" << std::endl;
+			return -1;
+		}
+		float expected[] = { 1.0f, 0.0f, 0.0f,
+							 0.0f, 1.0f, 0.0f,
+							 0.0f, 0.0f, 1.0f };
+		if (!tools::isEqual<float>(eye, expected, size*size))
+		{
+			std::cout << "FAIL" << std::endl;
+			std::cout << "EXPECTED: " << std::endl;
+			tools::printMatrix<float>(expected, size, size);
+			std::cout << "ACTUAL: " << std::endl;
+			tools::printMatrix<float>(eye, size, size);
+		}
+		else
+			std::cout << "SUCCESS" << std::endl;
+	}
+	return 0;
+}
 
 // @todo write test...
 int Test_IncrementalArrayGenerator(ResultsStruct* results)

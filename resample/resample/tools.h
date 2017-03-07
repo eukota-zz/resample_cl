@@ -76,7 +76,7 @@ namespace tools
 		return true;
 	}
 
-	void CreateIdentityMatrix(size_t size, float* output);
+	float* CreateIdentityMatrix(size_t size);
 	void TransposeMatrix(float* input, size_t rows, size_t cols, float* output);
 	float* MatrixMultiplier(float* matrixA, size_t rowsA, size_t colsA, float* matrixB, size_t rowsB, size_t colsB);
 	float* IncrementalArrayGenerator_ByStep(float start, float end, float stepVal);
@@ -86,6 +86,7 @@ namespace tools
 }
 
 struct ResultsStruct;
+int Test_CreateIdentityMatrix(ResultsStruct* results);
 int Test_SignalGenerator(ResultsStruct* results);
 int Test_AMatrixGenerator(ResultsStruct* results);
 int Test_MatrixMultiplier(ResultsStruct* results);

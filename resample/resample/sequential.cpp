@@ -65,7 +65,6 @@ int Test_QR(ResultsStruct* results)
 	const size_t arrayHeight = 5;
 
 	float* A = (float*)malloc(sizeof(float)*arrayWidth*arrayHeight);
-	float* Q = (float*)malloc(sizeof(float)*arrayHeight*arrayHeight);
 
 
 	float Atmp[] = { 1.000000, 0.000000,  0.000000,
@@ -79,7 +78,7 @@ int Test_QR(ResultsStruct* results)
 		A[i] = Atmp[i];
 
 	// Initialize Q
-	tools::CreateIdentityMatrix(arrayHeight, Q);
+	float* Q = tools::CreateIdentityMatrix(arrayHeight); // allocates space too
 
 	// Perform QR Decomposition
 	ProfilerStruct profiler;
