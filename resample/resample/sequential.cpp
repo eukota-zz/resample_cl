@@ -205,8 +205,7 @@ int Test_Resample(ResultsStruct* results)
 	return failed ? -1 : 0;
 }
 
-
-// Calculate Q and R matrixes for QR Decomposition of matrix
+// Calculate Q transpose and R matrixes for QR Decomposition
 void QR(cl_float* R, cl_float* Q, size_t arrayWidth, size_t arrayHeight)
 {
 	cl_float a;
@@ -214,10 +213,10 @@ void QR(cl_float* R, cl_float* Q, size_t arrayWidth, size_t arrayHeight)
 	cl_float c;
 	cl_float s;
 	cl_float r;
-	cl_float Rnew1[2048];
-	cl_float Rnew2[2048];
-	cl_float Qnew1[2048];
-	cl_float Qnew2[2048];
+	cl_float* Rnew1 = (cl_float*)malloc(arrayWidth * sizeof(cl_float));
+	cl_float* Rnew2 = (cl_float*)malloc(arrayWidth * sizeof(cl_float));
+	cl_float* Qnew1 = (cl_float*)malloc(arrayHeight * sizeof(cl_float));
+	cl_float* Qnew2 = (cl_float*)malloc(arrayHeight * sizeof(cl_float));
 	for (size_t j = 0; j < arrayWidth; j++)
 	{
 		for (size_t i = arrayHeight - 1; i > j; i--)
@@ -253,6 +252,10 @@ void QR(cl_float* R, cl_float* Q, size_t arrayWidth, size_t arrayHeight)
 			}
 		}
 	}
+	free(Rnew1);
+	free(Rnew2);
+	free(Qnew1);
+	free(Qnew2);
 }
 
 // Tests QR Decomposition
