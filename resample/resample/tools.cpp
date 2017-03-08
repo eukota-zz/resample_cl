@@ -34,6 +34,27 @@ namespace tools
 		return v;
 	}
 
+	// Set any value less than threshold to be actal 0.0f
+	// @param[in] input the float matrix input
+	// @param[in] rows the height of the matrix
+	// @param[in] cols the width of the matrix
+	// @param[in] threshold the value below which anything should be zeroed out
+	void FixZeros(float* input, size_t rows, size_t cols, float threshold)
+	{
+		if (!input || !rows || !cols)
+			return;
+
+		for (size_t row = 0; row < rows; ++row)
+		{
+			for (size_t col = 0; col < cols; ++col)
+			{
+				const size_t idx = row*cols + col;
+				if (input[idx] < threshold)
+					input[idx] = 0.0f;
+			}
+		}
+	}
+
 	// Transposes the input matrix
 	// @param[in] input matrix to transpose
 	// @param[in] rows height of input matrix

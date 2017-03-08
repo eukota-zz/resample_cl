@@ -76,6 +76,8 @@ namespace tools
 		return true;
 	}
 
+	void FixZeros(float* input, size_t rows, size_t cols, float threshold);
+
 	float* CreateIdentityMatrix(size_t size);
 	float* TransposeMatrix(float* input, size_t rows, size_t cols);
 	float* CopyMatrix(float* matrix, size_t rows, size_t cols);
