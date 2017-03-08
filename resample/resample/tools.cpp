@@ -144,7 +144,7 @@ namespace tools
 		if (stepVal <= 0 || end-start < stepVal)
 			return NULL;
 
-		const size_t sampleCount = (size_t)((end - start) / stepVal);
+		const size_t sampleCount = (size_t)(((end - start) / stepVal)+1);
 		return IncrementalArrayGenerator_BySize(start, stepVal, sampleCount);
 	}
 	float* IncrementalArrayGenerator_BySize(float start, float stepVal, size_t sampleCount)
