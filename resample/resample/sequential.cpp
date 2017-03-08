@@ -242,8 +242,8 @@ void QR(cl_float* R, cl_float* Q, size_t arrayWidth, size_t arrayHeight)
 			// Update Q matrix
 			for (size_t k = 0; k < arrayHeight; k++)
 			{
-				Qnew1[k] = Q[arrayHeight * (i - 1) + k] * c + Q[arrayHeight * i + k] * s;
-				Qnew2[k] = -Q[arrayHeight * (i - 1) + k] * s + Q[arrayHeight * i + k] * c;
+				Qnew1[k] = Q[arrayHeight * (i - 1) + k] * c - Q[arrayHeight * i + k] * s;
+				Qnew2[k] = Q[arrayHeight * (i - 1) + k] * s + Q[arrayHeight * i + k] * c;
 			}
 			for (size_t k = 0; k < arrayHeight; k++)
 			{
