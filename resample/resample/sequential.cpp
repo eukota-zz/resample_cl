@@ -64,7 +64,7 @@ cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t output
 	// perform PolyEval to get new values
 	cl_float* outputData = PolyEval(coeffsCalculated, order, outputTimeValues, outputSampleSize);
 	if (verbose)
-		tools::SaveDataFile(outputData, outputSampleSize, 1, "..\\data\\ResampleTest_signalOut.csv", true);
+		tools::SaveDataFile(outputData, outputSampleSize, 1, "..\\data\\ResampleTest_signalOut.csv", false);
 
 	*coeffs = tools::CopyMatrix(coeffsCalculated, order + 1, 1);
 
@@ -89,9 +89,15 @@ int Test_Resample(ResultsStruct* results)
 	size_t order = prefs::GetTestPolynomialOrder();
 	cl_float* coeffs = NULL;
 	const bool verbose = true; // force printing everything
-	cl_float* resampledData = Resample(inputFile, inputRate, outputRate, order, &coeffs, verbose);
-	bool failed = false;
 
+	ProfilerStruct profiler;
+	profiler.Start();
+	cl_float* resampledData = Resample(inputFile, inputRate, outputRate, order, &coeffs, verbose);
+	profiler.Stop();
+	results->HasWindowsRunTime = true;
+	results->WindowsRunTime = profiler.Log();
+
+	bool failed = false;
 	// Load And Verify Expected Coefficients Results
 	std::cout << "Verify Coefficients Match: ";
 	{
