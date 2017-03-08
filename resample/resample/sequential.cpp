@@ -7,12 +7,13 @@
 #include "groups.h"
 #include "CL/cl.h"
 
-// Resample data from inputFile assuming inputRate and resampling at outputRate using LSA polynomial of order
+// Resample data from inputFile assuming inputRate and resampling at outputRate using LSA polynomial of order order
+// Writes results to directory named "inputFile" to be used for plotting
 // @param[in] inputFile path to signal data - expected to be sampleSize-by-1
 // @param[in] inputRate input sample rate in samples per second
 // @param[in] outputRate output sample rate in samples per second
 // @param[in] order polynomial order to use
-// @param[out] optional output paramater is coefficients of LSA polynomial
+// @param[out] coeffs coefficients of LSA polynomial
 // @return resampled data
 cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t outputRate, size_t order, cl_float** coeffs, bool verbose)
 {

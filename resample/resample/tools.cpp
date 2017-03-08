@@ -249,6 +249,11 @@ namespace tools
 		return data;
 	}
 
+	// Writes data to file at filePath with option to append
+	// @param[in] data string to write to file
+	// @param[in] filePath path to file to write to
+	// @param[in](optional) append defaults false, when true, appends to file, when false, overwrites file
+	// @return true if successful
 	bool SaveDataFile(const std::string& data, const std::string& filePath, bool append)
 	{
 		if (data.empty())
@@ -266,6 +271,13 @@ namespace tools
 		return true;
 	}
 
+	// Writes a matrix to file at filePath with option to append
+	// @param[in] data matrix to write to file
+	// @param[in] rows height of matrix 
+	// @param[in] cols width of matrix
+	// @param[in] filePath path to file to write to
+	// @param[in](optional) append defaults false, when true, appends to file, when false, overwrites file
+	// @return true if successful
 	bool SaveDataFile(float* data, size_t rows, size_t cols, const std::string& filePath, bool append)
 	{
 		if (!data || !rows || !cols)
@@ -292,7 +304,6 @@ namespace tools
 		}
 		return true;
 	}
-
 }
 
 struct ResultsStruct; // forward declare

@@ -238,8 +238,9 @@ int PrintResultsToFile(ResultsStruct* results)
 int SetResultsFile(ResultsStruct* results)
 {
 	std::cout << "Enter path to output file to (currently " << RESULTS_FILE << "): ";
-	std::string s(RESULTS_FILE);
-	std::cin >> s;
-	RESULTS_FILE = s.c_str();
+	char buffer[255];
+	std::cin >> buffer;
+	buffer[strcspn(buffer, "\n")] = 0;
+	RESULTS_FILE = std::string(buffer);
 	return 0;
 }
