@@ -10,15 +10,21 @@ extern const float PI;
 
 namespace prefs
 {
-	std::string GetStringFromPrefs(const std::string& key, const std::string& defVal);
-	int GetIntFromPrefs(const std::string& key, int defVal);
-	bool GetBoolFromPrefs(const std::string& key, bool defVal);
-	float GetFloatFromPrefs(const std::string& key, float defVal);
+	std::string GetStringFromPrefs(const std::string& prefFile, const std::string& section, const std::string& key, const std::string& defVal);
+	int GetIntFromPrefs(const std::string& prefFile, const std::string& section, const std::string& key, int defVal);
+	bool GetBoolFromPrefs(const std::string& prefFile, const std::string& section, const std::string& key, bool defVal);
+	float GetFloatFromPrefs(const std::string& prefFile, const std::string& section, const std::string& key, float defVal);
 
-	std::string PrefFilePath();
-	bool PrefFileExists();
-	bool CreatePrefFile();
+	std::string PrefFilePath(const std::string& pref);
+	bool PrefFileExists(const std::string& prefFile);
+	bool CreatePrefFile(const std::string& prefFile);
 
-	void WritePrefs();
-	void ReadPrefs();
+	void WriteResamplePrefs();
+	void ReadResamplePrefs();
+
+	void WriteOctavePrefsDefaults();
+	std::string GetTestDataPath(const std::string& dataKey);
+	std::string GetSignalTestDataPath();
+	std::string GetCoeffsTestDataPath();
+	std::string GetOutputTestDataPath();
 }

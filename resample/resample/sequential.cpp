@@ -123,8 +123,7 @@ cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t output
 int Test_Resample(ResultsStruct* results)
 {
 	std::cout << "Test Resample: " << std::endl;
-	//const std::string inputFile = "..\\data\\test_resample_input_signal.csv";
-	const std::string inputFile = "..\\data\\test_resample_200_input_signal.csv";
+	const std::string inputFile = prefs::GetSignalTestDataPath();
 	size_t inputRate = 100;
 	size_t outputRate = 50;
 	size_t order = 7;
@@ -136,8 +135,7 @@ int Test_Resample(ResultsStruct* results)
 	// Load And Verify Expected Coefficients Results
 	std::cout << "Verify Coefficients Match: ";
 	{
-		//const std::string coeffsFile = "..\\data\\test_resample_coeffs.csv";
-		const std::string coeffsFile = "..\\data\\test_resample_200_coeffs.csv";
+		const std::string coeffsFile = prefs::GetCoeffsTestDataPath();
 		size_t coeffsRows = 0;
 		size_t coeffsCols = 0;
 		cl_float* expectedCoeffs = tools::LoadDataFile(coeffsFile, &coeffsRows, &coeffsCols);
@@ -169,8 +167,7 @@ int Test_Resample(ResultsStruct* results)
 	// Load And Verify Signal Output Results
 	std::cout << "Verify Resample Results Match: ";
 	{
-		//const std::string outputFile = "..\\data\\test_resample_output_signal.csv";
-		const std::string outputFile = "..\\data\\test_resample_200_output_signal.csv";
+		const std::string outputFile = prefs::GetOutputTestDataPath();
 		size_t outputRows = 0;
 		size_t outputCols = 0;
 		cl_float* expectedOutput = tools::LoadDataFile(outputFile, &outputRows, &outputCols);

@@ -1,44 +1,52 @@
 % Script that calls the polynomial least squares function
 % Writes out results to files used by C++ Test Function
-
 clear all
 close all
 clc
 
-y=csvread("..\\resample\\data\\test_resample_input_signal.csv");
-sampleCountIn = numel(y);
+%%% EDIT INPUTS %%%
+signalFilePath = "..\\resample\\data\\test_resample_input_signal_FULL.csv"; % 2048 sample points
+sampleCountIn = 200; % reduce input size since octave chokes on large inputs
+sampleRateIn = 100;
+sampleRateOut = 50;
+order = 7;
+%%%%%%%%%%%%%%%%%%%
 
-% reduce input size since octave chokes on large inputs
-sampleCountIn = 200;
-y=y(1:sampleCountIn)';
+signalData=csvread(signalFilePath);
+signalData=signalData(1:sampleCountIn)';
 
 % Input
-sampleRateIn = 100;
 timeStepIn = 1/sampleRateIn;
 endTimeIn = timeStepIn*sampleCountIn;
 xIn=timeStepIn:timeStepIn:endTimeIn;
 xIn=xIn';
 
 % Output
-sampleRateOut = 50;
 timeStepOut = 1/sampleRateOut;
 endTimeOut = endTimeIn; 
 xOut=timeStepOut:timeStepOut:endTimeOut;
 sampleCountOut = endTimeOut*sampleRateOut;
 
 % solve for coefficients
-k = 7;
-coeffs = polyLsqr(xIn, y, k);
-order = k;
+coeffs = polyLsqr(xIn, signalData, order);
 fit = polyEval(coeffs,sampleRateOut,order,sampleCountOut-1);
 
 % plot figure
 figure
-plot(xIn,y,'o',xOut,fit,'.-')
+plot(xIn,signalData,'o',xOut,fit,'.-')
 legend('data','polynomial fit')
 
 % save data
-csvwrite('..\resample\data\test_resample_200_input_signal.csv',y');
-csvwrite('..\resample\data\test_resample_200_coeffs.csv',coeffs);
-csvwrite('..\resample\data\test_resample_200_output_signal.csv',fit');
-  
+saveDataPrefix = '..\\resample\\';
+signalDataPath = 'data\\test_resample_input_signal.csv';
+csvwrite(strcat(saveDataPrefix, signalDataPath), signalData');
+coeffsDataPath = 'data\\test_resample_coeffs.csv';
+csvwrite(strcat(saveDataPrefix, coeffsDataPath), coeffs);
+outputDataPath = 'data\\test_resample_output_signal.csv';
+csvwrite(strcat(saveDataPrefix, outputDataPath), fit');
+
+cppDataPrefix = '..\\';
+octavePrefFile = '..\\resample\\resample\\octave.ini';
+writeToIniFile(octavePrefFile, 'SignalData', strcat(cppDataPrefix, signalDataPath),1); 
+writeToIniFile(octavePrefFile, 'CoeffsData', strcat(cppDataPrefix, coeffsDataPath),0); 
+writeToIniFile(octavePrefFile, 'OutputData', strcat(cppDataPrefix, outputDataPath),0); 

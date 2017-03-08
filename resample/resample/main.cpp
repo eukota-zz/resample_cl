@@ -33,7 +33,8 @@ void PrintInstructions()
 
 int _tmain(int argc, TCHAR* argv[])
 {
-	prefs::ReadPrefs();
+	prefs::ReadResamplePrefs();
+	(void)prefs::GetSignalTestDataPath();
 
 	srand(12345);
 	string input;
@@ -55,7 +56,7 @@ int _tmain(int argc, TCHAR* argv[])
 		cout << "Results (0 = success): \n" << res << endl;
 	} while (true);
 
-	prefs::WritePrefs();
+	prefs::WriteResamplePrefs();
 	return 0;
 }
 
