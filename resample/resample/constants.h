@@ -27,4 +27,7 @@ namespace prefs
 	std::string GetSignalTestDataPath();
 	std::string GetCoeffsTestDataPath();
 	std::string GetOutputTestDataPath();
+	int GetTestSampleInputRate();
+	int GetTestSampleOutputRate();
+	int GetTestPolynomialOrder();
 }

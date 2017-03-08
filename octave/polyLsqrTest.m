@@ -7,7 +7,7 @@ clc
 %%% EDIT INPUTS %%%
 signalFilePath = "..\\resample\\data\\test_resample_input_signal_FULL.csv"; % 2048 sample points
 sampleCountIn = 200; % reduce input size since octave chokes on large inputs
-sampleRateIn = 100;
+sampleRateIn = 200;
 sampleRateOut = 50;
 order = 7;
 %%%%%%%%%%%%%%%%%%%
@@ -45,8 +45,12 @@ csvwrite(strcat(saveDataPrefix, coeffsDataPath), coeffs);
 outputDataPath = 'data\\test_resample_output_signal.csv';
 csvwrite(strcat(saveDataPrefix, outputDataPath), fit');
 
+% write out octave.ini for resample.exe file
 cppDataPrefix = '..\\';
 octavePrefFile = '..\\resample\\resample\\octave.ini';
-writeToIniFile(octavePrefFile, 'SignalData', strcat(cppDataPrefix, signalDataPath),1); 
-writeToIniFile(octavePrefFile, 'CoeffsData', strcat(cppDataPrefix, coeffsDataPath),0); 
-writeToIniFile(octavePrefFile, 'OutputData', strcat(cppDataPrefix, outputDataPath),0); 
+writeStringToIniFile(octavePrefFile, 'SignalData', strcat(cppDataPrefix, signalDataPath),1); 
+writeStringToIniFile(octavePrefFile, 'CoeffsData', strcat(cppDataPrefix, coeffsDataPath),0); 
+writeStringToIniFile(octavePrefFile, 'OutputData', strcat(cppDataPrefix, outputDataPath),0); 
+writeIntToIniFile(octavePrefFile, 'SampleInputRate', sampleRateIn,0); 
+writeIntToIniFile(octavePrefFile, 'SampleOutputRate', sampleRateOut,0); 
+writeIntToIniFile(octavePrefFile, 'PolynomialOrder', order,0); 

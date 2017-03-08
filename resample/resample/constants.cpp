@@ -22,6 +22,10 @@ namespace
 	const char* PREF_SIGNAL_DATA = "SignalData";
 	const char* PREF_COEFFS_DATA = "CoeffsData";
 	const char* PREF_OUTPUT_DATA = "OutputData";
+	const char* PREF_SAMPLE_INPUT_RATE = "SampleInputRate";
+	const char* PREF_SAMPLE_OUTPUT_RATE = "SampleOutputRate";
+	const char* PREF_POLYNOMIAL_ORDER = "PolynomialOrder";
+
 }
 
 int SAMPLE_SIZE = 1024;
@@ -128,9 +132,13 @@ namespace prefs
 	void WriteOctavePrefsDefaults()
 	{
 		(void)CreatePrefFile(OCTAVE_PREF_FILE);
-		WritePrivateProfileStringA(OCTAVE_APP, PREF_SIGNAL_DATA, "..\\data\\test_resample_input_signal.csv", PrefFilePath(OCTAVE_PREF_FILE).c_str());
-		WritePrivateProfileStringA(OCTAVE_APP, PREF_COEFFS_DATA, "..\\data\\test_resample_coeffs.csv", PrefFilePath(OCTAVE_PREF_FILE).c_str());
-		WritePrivateProfileStringA(OCTAVE_APP, PREF_OUTPUT_DATA, "..\\data\\test_resample_output_signal.csv", PrefFilePath(OCTAVE_PREF_FILE).c_str());
+		const std::string prefFilePath = PrefFilePath(OCTAVE_PREF_FILE);
+		WritePrivateProfileStringA(OCTAVE_APP, PREF_SIGNAL_DATA, "..\\data\\test_resample_input_signal.csv", prefFilePath.c_str());
+		WritePrivateProfileStringA(OCTAVE_APP, PREF_COEFFS_DATA, "..\\data\\test_resample_coeffs.csv", prefFilePath.c_str());
+		WritePrivateProfileStringA(OCTAVE_APP, PREF_OUTPUT_DATA, "..\\data\\test_resample_output_signal.csv", prefFilePath.c_str());
+		WritePrivateProfileStringA(OCTAVE_APP, PREF_SAMPLE_INPUT_RATE, std::to_string(100).c_str(), prefFilePath.c_str());
+		WritePrivateProfileStringA(OCTAVE_APP, PREF_SAMPLE_OUTPUT_RATE, std::to_string(50).c_str(), prefFilePath.c_str());
+		WritePrivateProfileStringA(OCTAVE_APP, PREF_POLYNOMIAL_ORDER, std::to_string(7).c_str(), prefFilePath.c_str());
 	}
 	// Reads from Octave.ini
 	std::string GetTestDataPath(const std::string& dataKey)
@@ -156,6 +164,21 @@ namespace prefs
 	std::string GetOutputTestDataPath()
 	{
 		return GetTestDataPath(PREF_OUTPUT_DATA);
+	}
+
+	int GetTestSampleInputRate()
+	{
+		return GetIntFromPrefs(PrefFilePath(OCTAVE_PREF_FILE), OCTAVE_APP, PREF_SAMPLE_INPUT_RATE, 100);
+	}
+
+	int GetTestSampleOutputRate()
+	{
+		return GetIntFromPrefs(PrefFilePath(OCTAVE_PREF_FILE), OCTAVE_APP, PREF_SAMPLE_OUTPUT_RATE, 50);
+	}
+
+	int GetTestPolynomialOrder()
+	{
+		return GetIntFromPrefs(PrefFilePath(OCTAVE_PREF_FILE), OCTAVE_APP, PREF_POLYNOMIAL_ORDER, 7);
 	}
 
 }

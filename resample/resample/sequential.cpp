@@ -21,13 +21,9 @@ cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t output
 	size_t rows = 0;
 	size_t cols = 0;
 	float* signalData = tools::LoadDataFile(inputFile, &rows, &cols);
-	const std::string outputFile = "..\\data\\Resample_Verbose_Output.txt";
 	if (verbose)
-	{
-		tools::SaveDataFile("Resample Verbose Data Output\n", outputFile, false);
-		tools::SaveDataFile("Signal Input:\n", outputFile, true);
-		tools::SaveDataFile(signalData, rows, cols, outputFile, true);
-	}
+		tools::SaveDataFile(signalData, rows, cols, "..\\data\\ResampleTest_signalIn.csv", false);
+
 	if (cols > 1)
 	{
 		LogError("Resample signal data file has too many inputs");
@@ -41,51 +37,21 @@ cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t output
 	const float inputTimeEnd = (float)sampleCount / (float)inputRate;
 	float* inputTimes = tools::IncrementalArrayGenerator_ByStep(inputTimeStep, inputTimeEnd, inputTimeStep);
 	if (verbose)
-	{
-		tools::SaveDataFile("Input Times:\n", outputFile, true);
-		tools::SaveDataFile(inputTimes, sampleCount, 1, outputFile, true);
-	}
+		tools::SaveDataFile(inputTimes, sampleCount, 1, "..\\data\\ResampleTest_timeIn.csv", false);
 
 	// create A matrix
 	float* matrixA = tools::GenerateAMatrix(inputTimes, sampleCount, order);
-	if (verbose)
-	{
-		tools::SaveDataFile("A Matrix:\n", outputFile, true);
-		tools::SaveDataFile(matrixA, sampleCount, order+1, outputFile, true);
-	}
 
 	// perform QR to get Q and R matrixes
 	cl_float* R = tools::CopyMatrix(matrixA, sampleCount, order + 1);
 	cl_float* QTranspose = tools::CreateIdentityMatrix(sampleCount);
 	QR(R, QTranspose, order+1, sampleCount); // outputs QTranspose
-	if (verbose)
-	{
-		tools::SaveDataFile("R:\n", outputFile, true);
-		tools::SaveDataFile(R, sampleCount, order + 1, outputFile, true);
-	}
-	if (verbose)
-	{
-		tools::SaveDataFile("Q:\n", outputFile, true);
-		cl_float* Q = tools::TransposeMatrix(QTranspose, sampleCount, sampleCount);
-		tools::SaveDataFile(Q, sampleCount, sampleCount, outputFile, true);
-		free(Q);
-	}
 
 	// multiply Q by signal input data to get Qtb
 	cl_float* Qtb = tools::MatrixMultiplier(QTranspose, sampleCount, sampleCount, signalData, sampleCount, 1);
-	if (verbose)
-	{
-		tools::SaveDataFile("Qtb:\n", outputFile, true);
-		tools::SaveDataFile(Qtb, sampleCount, 1, outputFile, true);
-	}
 
 	// perform BackSub to get coefficients
 	cl_float* coeffsCalculated = BackSub(R, Qtb, order+1);
-	if (verbose)
-	{
-		tools::SaveDataFile("Coeffs:\n", outputFile, true);
-		tools::SaveDataFile(coeffsCalculated, order+1, 1, outputFile, true);
-	}
 
 	// Generate output sample times to evaulate at
 	const float outputTimeStep = 1.0f / (float)outputRate;
@@ -93,18 +59,12 @@ cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t output
 	const size_t outputSampleSize = (size_t)(outputTimeEnd * outputRate);
 	cl_float* outputTimeValues = tools::IncrementalArrayGenerator_ByStep(outputTimeStep, outputTimeEnd, outputTimeStep);
 	if (verbose)
-	{
-		tools::SaveDataFile("Output Time Values:\n", outputFile, true);
-		tools::SaveDataFile(outputTimeValues, outputSampleSize, 1, outputFile, true);
-	}
+		tools::SaveDataFile(outputTimeValues, outputSampleSize, 1, "..\\data\\ResampleTest_timeOut.csv", false);
 
 	// perform PolyEval to get new values
 	cl_float* outputData = PolyEval(coeffsCalculated, order, outputTimeValues, outputSampleSize);
 	if (verbose)
-	{
-		tools::SaveDataFile("Polynomial Evaluations:\n", outputFile, true);
-		tools::SaveDataFile(outputData, outputSampleSize, 1, outputFile, true);
-	}
+		tools::SaveDataFile(outputData, outputSampleSize, 1, "..\\data\\ResampleTest_signalOut.csv", true);
 
 	*coeffs = tools::CopyMatrix(coeffsCalculated, order + 1, 1);
 
@@ -124,9 +84,9 @@ int Test_Resample(ResultsStruct* results)
 {
 	std::cout << "Test Resample: " << std::endl;
 	const std::string inputFile = prefs::GetSignalTestDataPath();
-	size_t inputRate = 100;
-	size_t outputRate = 50;
-	size_t order = 7;
+	size_t inputRate = prefs::GetTestSampleInputRate();
+	size_t outputRate = prefs::GetTestSampleOutputRate();
+	size_t order = prefs::GetTestPolynomialOrder();
 	cl_float* coeffs = NULL;
 	const bool verbose = true; // force printing everything
 	cl_float* resampledData = Resample(inputFile, inputRate, outputRate, order, &coeffs, verbose);
