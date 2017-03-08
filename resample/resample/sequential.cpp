@@ -38,7 +38,7 @@ cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t output
 	// create input time vector
 	const float inputTimeStep = 1 / (float)inputRate;
 	const float inputTimeEnd = (float)sampleCount / (float)inputRate;
-	float* inputTimes = tools::IncrementalArrayGenerator_ByStep(0.0f, inputTimeEnd, inputTimeStep);
+	float* inputTimes = tools::IncrementalArrayGenerator_ByStep(inputTimeStep, inputTimeEnd, inputTimeStep);
 	if (verbose)
 	{
 		tools::SaveDataFile("Input Times:\n", outputFile, true);
@@ -55,8 +55,8 @@ cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t output
 
 	// perform QR to get Q and R matrixes
 	cl_float* R = tools::CopyMatrix(matrixA, sampleCount, order + 1);
-	cl_float* Q = tools::CreateIdentityMatrix(sampleCount);
-	QR(R, Q, order+1, sampleCount);
+	cl_float* QTranspose = tools::CreateIdentityMatrix(sampleCount);
+	QR(R, QTranspose, order+1, sampleCount); // outputs QTranspose
 	if (verbose)
 	{
 		tools::SaveDataFile("R:\n", outputFile, true);
@@ -65,11 +65,13 @@ cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t output
 	if (verbose)
 	{
 		tools::SaveDataFile("Q:\n", outputFile, true);
+		cl_float* Q = tools::TransposeMatrix(QTranspose, sampleCount, sampleCount);
 		tools::SaveDataFile(Q, sampleCount, sampleCount, outputFile, true);
+		free(Q);
 	}
 
 	// multiply Q by signal input data to get Qtb
-	cl_float* Qtb = tools::MatrixMultiplier(Q, sampleCount, sampleCount, signalData, sampleCount, 1);
+	cl_float* Qtb = tools::MatrixMultiplier(QTranspose, sampleCount, sampleCount, signalData, sampleCount, 1);
 	if (verbose)
 	{
 		tools::SaveDataFile("Qtb:\n", outputFile, true);
@@ -88,7 +90,7 @@ cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t output
 	const float outputTimeStep = 1.0f / (float)outputRate;
 	const float outputTimeEnd = inputTimeEnd;
 	const size_t outputSampleSize = (size_t)(outputTimeEnd * outputRate);
-	cl_float* outputTimeValues = tools::IncrementalArrayGenerator_ByStep(0.0f, outputTimeEnd, outputTimeStep);
+	cl_float* outputTimeValues = tools::IncrementalArrayGenerator_ByStep(outputTimeStep, outputTimeEnd, outputTimeStep);
 	if (verbose)
 	{
 		tools::SaveDataFile("Output Time Values:\n", outputFile, true);
@@ -109,7 +111,7 @@ cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t output
 	free(inputTimes);
 	free(matrixA);
 	free(R);
-	free(Q);
+	free(QTranspose);
 	free(Qtb);
 	free(outputTimeValues);
 	free(coeffsCalculated);
