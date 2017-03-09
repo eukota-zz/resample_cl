@@ -13,6 +13,133 @@ namespace
 	const char* FILENAME = "resample.cl";
 }
 
+// Evaluate polynomial results for input values with coefficients in parallel
+// @param[in] coeffs array of coefficients of size order+1
+// @param[in] order order of the polynomial
+// @param[in] input array of input values
+// @param[in] numSamples number of input values
+// @return output array of calculated values
+cl_float* PolyEvalOcl(cl_float* coeffs, size_t order, cl_float* input, size_t numSamples)
+{
+	cl_int err;
+	ocl_args ocl(CL_DEVICE_TYPE_GPU);
+
+	cl_float* output = (cl_float*)malloc(numSamples * sizeof(cl_float));
+
+	// Create OpenCL buffers from host memory for use by Kernel
+	cl_float8        c = { coeffs[0], coeffs[1], coeffs[2], coeffs[3], coeffs[4], coeffs[5], coeffs[6], coeffs[7] };
+	cl_mem           srcA;              // hold first source buffer
+	cl_mem           dstMem;            // hold destination buffer
+	if (CL_SUCCESS != CreateReadBufferArg(&ocl.context, &srcA, input, numSamples, 1))
+		return 0;
+	if (CL_SUCCESS != CreateWriteBufferArg(&ocl.context, &dstMem, output, numSamples, 1))
+		return 0;
+
+	// Create and build the OpenCL program - imports named cl file.
+	if (CL_SUCCESS != ocl.CreateAndBuildProgram(FILENAME))
+		return 0;
+
+	// Create Kernel - kernel name must match kernel name in cl file
+	ocl.kernel = clCreateKernel(ocl.program, "PolyEvalOcl", &err);
+	if (CL_SUCCESS != err)
+	{
+		LogError("Error: clCreateKernel returned %s\n", TranslateOpenCLError(err));
+		return 0;
+	}
+
+	// Set OpenCL Kernel Arguments - Order Indicated by Final Argument
+	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &c, 0))
+		return 0;
+	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &srcA, 1))
+		return 0;
+	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &dstMem, 2))
+		return 0;
+
+	// Enqueue Kernel
+	size_t globalWorkSize[1] = { numSamples };
+	if (CL_SUCCESS != ocl.ExecuteKernel(globalWorkSize, 1, NULL))
+		return 0;
+
+	// Map Host Buffer to Local Data
+	if (CL_SUCCESS != MapHostBufferToLocal(&ocl.commandQueue, &dstMem, numSamples, 1, &output))
+	{
+		LogError("Error: clEnqueueMapBuffer failed.\n");
+		return 0;
+	}
+
+	if (CL_SUCCESS != clReleaseMemObject(srcA))
+		LogError("Error: clReleaseMemObject returned '%s'.\n", TranslateOpenCLError(err));
+	if (CL_SUCCESS != clReleaseMemObject(dstMem))
+		LogError("Error: clReleaseMemObject returned '%s'.\n", TranslateOpenCLError(err));
+
+    return output;
+}
+
+// Multiplies two matrices together [A]*[B] where A is MxN and B is Nx1
+// @param[in] rowsA number of rows of A (M)
+// @param[in] colsA number of columns of A (N)
+// @param[in] matrixA left matrix
+// @param[in] matrixB right colunm vector
+// @return output result
+// NOTE: CALLER TAKES OWNERSHIP OF RETURN VALUE
+float* MatrixMultiplierOcl(cl_uint rowsA, cl_uint colsA, float* matrixA, float* matrixB)
+{
+	cl_int err;
+	ocl_args ocl(CL_DEVICE_TYPE_GPU);
+
+	cl_float* matrixC = (cl_float*)malloc(colsA * sizeof(cl_float));
+
+	// Create OpenCL buffers from host memory for use by Kernel
+	cl_mem           srcA;              // hold the A matrix buffer
+	cl_mem           srcB;              // holds the B matrix buffer
+	cl_mem           dstMem;            // hold the C matrix buffer
+	if (CL_SUCCESS != CreateReadBufferArg(&ocl.context, &srcA, matrixA, rowsA * colsA, 1))
+		return 0;
+	if (CL_SUCCESS != CreateReadBufferArg(&ocl.context, &srcB, matrixB, colsA, 1))
+		return 0;
+	if (CL_SUCCESS != CreateWriteBufferArg(&ocl.context, &dstMem, matrixC, colsA, 1))
+		return 0;
+
+	// Create and build the OpenCL program - imports named cl file.
+	if (CL_SUCCESS != ocl.CreateAndBuildProgram(FILENAME))
+		return 0;
+
+	// Create Kernel - kernel name must match kernel name in cl file
+	ocl.kernel = clCreateKernel(ocl.program, "MatrixMultiplierOcl", &err);
+	if (CL_SUCCESS != err)
+	{
+		LogError("Error: clCreateKernel returned %s\n", TranslateOpenCLError(err));
+		return 0;
+	}
+
+	// Set OpenCL Kernel Arguments - Order Indicated by Final Argument
+	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &colsA, 0))
+		return 0;
+	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &srcA, 1))
+		return 0;
+	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &dstMem, 2))
+		return 0;
+
+	// Enqueue Kernel
+	size_t globalWorkSize[1] = { colsA };
+	if (CL_SUCCESS != ocl.ExecuteKernel(globalWorkSize, 1, NULL))
+		return 0;
+
+	// Map Host Buffer to Local Data
+	if (CL_SUCCESS != MapHostBufferToLocal(&ocl.commandQueue, &dstMem, colsA, 1, &matrixC))
+	{
+		LogError("Error: clEnqueueMapBuffer failed.\n");
+		return 0;
+	}
+
+	if (CL_SUCCESS != clReleaseMemObject(srcA))
+		LogError("Error: clReleaseMemObject returned '%s'.\n", TranslateOpenCLError(err));
+	if (CL_SUCCESS != clReleaseMemObject(dstMem))
+		LogError("Error: clReleaseMemObject returned '%s'.\n", TranslateOpenCLError(err));
+
+	return matrixC;
+}
+
 ////////////////// RESAMPLE USING POLYNOMIAL APPROXIMATION /////////////////
 int exCL_Resample(ResultsStruct* results)
 {
@@ -122,6 +249,7 @@ int exCL_Resample(ResultsStruct* results)
 	results->HasOpenCLRunTime = true;
 	return 0;
 }
+
 
 ////////////////// QR DECOMPOSITION ///////////////
 int exCL_QRD(ResultsStruct* results)

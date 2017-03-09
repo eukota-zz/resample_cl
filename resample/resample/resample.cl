@@ -1,4 +1,4 @@
-__kernel void Resample(float8 coeffs, __global float* t, __global float* result)
+__kernel void PolyEvalOcl(float8 coeffs, __global float* t, __global float* result)
 {
 	const unsigned int id = get_global_id(0);
 	float val = t[id];
