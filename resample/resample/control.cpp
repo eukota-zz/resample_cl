@@ -47,6 +47,7 @@ std::map<int, ProblemGroup*> ControlClass::GroupFactory()
 	ProblemGroup* projectFuncs = new ProblemGroup(1, "Control");
 	projectFuncs->problems_[++idx] = new Problem(&exCL_Resample, "OpenCL: Apply sixth-order polynomial");
 	projectFuncs->problems_[++idx] = new Problem(&Test_PolyEval, "Test Polynomial Evaluation Function");
+	projectFuncs->problems_[++idx] = new Problem(&Test_PolyEvalOcl, "Test OpenCL Polynomial Evaluation Function");
 	projectFuncs->problems_[++idx] = new Problem(&Test_QR, "Test QR Decomposition Function");
 	projectFuncs->problems_[++idx] = new Problem(&Test_BackSub, "Test Back Substitution Function");
 	projectFuncs->problems_[++idx] = new Problem(&Test_CreateIdentityMatrix, "Test Create Identity Matrix Function");
@@ -55,6 +56,7 @@ std::map<int, ProblemGroup*> ControlClass::GroupFactory()
 	projectFuncs->problems_[++idx] = new Problem(&Test_GenerateAMatrix, "Test Generator A Matrix Function");
 	projectFuncs->problems_[++idx] = new Problem(&Test_CopyMatrix, "Test Copy Matrix Function");
 	projectFuncs->problems_[++idx] = new Problem(&Test_MatrixMultiplier, "Test Matrix Mutlipication Function");
+	projectFuncs->problems_[++idx] = new Problem(&Test_MatrixMultiplierOcl, "Test OpenCL Matrix Multiplication Function");
 	projectFuncs->problems_[++idx] = new Problem(&Test_Resample, "Test Complete Resample Function");
 	pgs[projectFuncs->GroupNum()] = projectFuncs;
 	return pgs;

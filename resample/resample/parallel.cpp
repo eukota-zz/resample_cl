@@ -2,6 +2,7 @@
 #include "groups.h"
 #include "ocl.h"
 #include "utils.h"
+#include "tools.h"
 #include "enums.h"
 #include "data.h"
 #include "profiler.h"
@@ -117,7 +118,9 @@ float* MatrixMultiplierOcl(cl_uint rowsA, cl_uint colsA, float* matrixA, float* 
 		return 0;
 	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &srcA, 1))
 		return 0;
-	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &dstMem, 2))
+	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &srcB, 2))
+		return 0;
+	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &dstMem, 3))
 		return 0;
 
 	// Enqueue Kernel
@@ -138,6 +141,82 @@ float* MatrixMultiplierOcl(cl_uint rowsA, cl_uint colsA, float* matrixA, float* 
 		LogError("Error: clReleaseMemObject returned '%s'.\n", TranslateOpenCLError(err));
 
 	return matrixC;
+}
+
+int Test_PolyEvalOcl(ResultsStruct* results)
+{
+	cl_float coeffs[] = { 1, 2, 3, 4, 5, 6, 7, 8 };
+	cl_float input[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+	cl_float Expected[] = { 36, 1793, 24604, 167481, 756836, 2620201, 7526268, 18831569, 42374116, 87654321 };
+	cl_int numSamples = 10;
+	int order = 7;
+
+	ProfilerStruct profiler;
+	profiler.Start();
+
+	cl_float* Results = PolyEvalOcl(coeffs, order, input, numSamples);
+
+	profiler.Stop();
+	float runTime = profiler.Log();
+
+	if (tools::isEqual<float>(Results, Expected, numSamples))
+	{
+		std::cout << "SUCCESS!" << std::endl;
+	}
+	else
+	{
+		std::cout << "FAILURE!" << std::endl;
+		std::cout << "Expected: " << std::endl;
+		tools::printArray<float>(Expected, numSamples);
+		std::cout << "Actual: " << std::endl;
+		tools::printArray<float>(Results, numSamples);
+	}
+
+	results->WindowsRunTime = runTime;
+	results->HasWindowsRunTime = true;
+	results->OpenCLRunTime = 0;
+	results->HasOpenCLRunTime = false;
+	return 0;
+}
+
+int Test_MatrixMultiplierOcl(ResultsStruct* results)
+{
+	cl_uint rowsA = 3;
+	cl_uint colsA = 3;
+	cl_float matrixA[] = { 1, 2, 3,
+					       4, 5, 6,
+						   7, 8, 9 };
+
+	cl_float matrixB[3] = { 1, 2, 3 };
+
+	cl_float Expected[] = { 14, 32, 50 };
+
+	ProfilerStruct profiler;
+	profiler.Start();
+
+	cl_float* Results = MatrixMultiplierOcl(rowsA, colsA, matrixA, matrixB);
+
+	profiler.Stop();
+	float runTime = profiler.Log();
+
+	if (tools::isEqual<float>(Results, Expected, colsA))
+	{
+		std::cout << "SUCCESS!" << std::endl;
+	}
+	else
+	{
+		std::cout << "FAILURE!" << std::endl;
+		std::cout << "Expected: " << std::endl;
+		tools::printArray<float>(Expected, colsA);
+		std::cout << "Actual: " << std::endl;
+		tools::printArray<float>(Results, colsA);
+	}
+
+	results->WindowsRunTime = runTime;
+	results->HasWindowsRunTime = true;
+	results->OpenCLRunTime = 0;
+	results->HasOpenCLRunTime = false;
+	return 0;
 }
 
 ////////////////// RESAMPLE USING POLYNOMIAL APPROXIMATION /////////////////

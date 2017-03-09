@@ -41,6 +41,7 @@ struct ocl_args
 	cl_uint ExecuteKernel(size_t *globalWorkSize, cl_uint workSizeCount, size_t* localWorkSize = NULL);
 };
 
+cl_uint SetKernelArgument(cl_kernel* kernel, cl_float* mem, unsigned int argNum);
 cl_uint SetKernelArgument(cl_kernel* kernel, cl_float8* mem, unsigned int argNum);
 cl_uint SetKernelArgument(cl_kernel* kernel, cl_uint* mem, unsigned int argNum);
 cl_uint SetKernelArgument(cl_kernel* kernel, cl_mem* mem, unsigned int argNum);
