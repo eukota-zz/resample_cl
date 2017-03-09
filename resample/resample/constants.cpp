@@ -50,7 +50,8 @@ namespace prefs
 	}
 	bool GetBoolFromPrefs(const std::string& prefFile, const std::string& section, const std::string& key, bool defVal)
 	{
-		return (bool)GetIntFromPrefs(prefFile, section, key, defVal ? 1 : 0);
+		const int val = GetIntFromPrefs(prefFile, section, key, defVal ? 1 : 0);
+		return (val == 1);
 	}
 	float GetFloatFromPrefs(const std::string& prefFile, const std::string& section, const std::string& key, float defVal)
 	{

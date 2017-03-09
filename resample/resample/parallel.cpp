@@ -31,9 +31,9 @@ cl_float* PolyEvalOcl(cl_float* coeffs, size_t order, cl_float* input, size_t nu
 	cl_float8        c = { coeffs[0], coeffs[1], coeffs[2], coeffs[3], coeffs[4], coeffs[5], coeffs[6], coeffs[7] };
 	cl_mem           srcA;              // hold first source buffer
 	cl_mem           dstMem;            // hold destination buffer
-	if (CL_SUCCESS != CreateReadBufferArg(&ocl.context, &srcA, input, numSamples, 1))
+	if (CL_SUCCESS != CreateReadBufferArg(&ocl.context, &srcA, input, (cl_uint)numSamples, 1))
 		return 0;
-	if (CL_SUCCESS != CreateWriteBufferArg(&ocl.context, &dstMem, output, numSamples, 1))
+	if (CL_SUCCESS != CreateWriteBufferArg(&ocl.context, &dstMem, output, (cl_uint)numSamples, 1))
 		return 0;
 
 	// Create and build the OpenCL program - imports named cl file.
@@ -62,7 +62,7 @@ cl_float* PolyEvalOcl(cl_float* coeffs, size_t order, cl_float* input, size_t nu
 		return 0;
 
 	// Map Host Buffer to Local Data
-	if (CL_SUCCESS != MapHostBufferToLocal(&ocl.commandQueue, &dstMem, numSamples, 1, &output))
+	if (CL_SUCCESS != MapHostBufferToLocal(&ocl.commandQueue, &dstMem, (cl_uint)numSamples, 1, &output))
 	{
 		LogError("Error: clEnqueueMapBuffer failed.\n");
 		return 0;
@@ -145,9 +145,9 @@ float* MatrixMultiplierOcl(cl_uint rowsA, cl_uint colsA, float* matrixA, float* 
 
 int Test_PolyEvalOcl(ResultsStruct* results)
 {
-	cl_float coeffs[] = { 1, 2, 3, 4, 5, 6, 7, 8 };
-	cl_float input[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-	cl_float Expected[] = { 36, 1793, 24604, 167481, 756836, 2620201, 7526268, 18831569, 42374116, 87654321 };
+	cl_float coeffs[] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f };
+	cl_float input[] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f };
+	cl_float Expected[] = { 36.0f, 1793.0f, 24604.0f, 167481.0f, 756836.0f, 2620201.0f, 7526268.0f, 18831569.0f, 42374116.0f, 87654321.0f };
 	cl_int numSamples = 10;
 	int order = 7;
 
@@ -328,11 +328,3 @@ int exCL_Resample(ResultsStruct* results)
 	results->HasOpenCLRunTime = true;
 	return 0;
 }
-
-
-////////////////// QR DECOMPOSITION ///////////////
-int exCL_QRD(ResultsStruct* results)
-{
-	return 0;
-}
-
