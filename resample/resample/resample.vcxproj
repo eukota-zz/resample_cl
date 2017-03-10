@@ -130,7 +130,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Intel_OpenCL_Build_Rules>
-      <Device>0</Device>
+      <Device>1</Device>
     </Intel_OpenCL_Build_Rules>
     <ClCompile>
       <AdditionalIncludeDirectories>$(INTELOCLSDKROOT)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -179,8 +179,8 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="constants.cpp" />
-    <ClCompile Include="control.cpp" />
+    <ClCompile Include="settings.cpp" />
+    <ClCompile Include="test_group.cpp" />
     <ClCompile Include="data.cpp" />
     <ClCompile Include="enums.cpp" />
     <ClCompile Include="groups.cpp" />
@@ -188,19 +188,21 @@
     <ClCompile Include="ocl.cpp" />
     <ClCompile Include="parallel.cpp" />
     <ClCompile Include="profiler.cpp" />
+    <ClCompile Include="resample_group.cpp" />
     <ClCompile Include="sequential.cpp" />
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="constants.h" />
-    <ClInclude Include="control.h" />
+    <ClInclude Include="settings.h" />
+    <ClInclude Include="test_group.h" />
     <ClInclude Include="data.h" />
     <ClInclude Include="enums.h" />
     <ClInclude Include="groups.h" />
     <ClInclude Include="ocl.h" />
     <ClInclude Include="parallel.h" />
     <ClInclude Include="profiler.h" />
+    <ClInclude Include="resample_group.h" />
     <ClInclude Include="sequential.h" />
     <ClInclude Include="tools.h" />
     <ClInclude Include="utils.h" />

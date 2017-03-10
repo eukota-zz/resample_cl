@@ -15,8 +15,9 @@
 #include "ocl.h"
 #include "enums.h"
 #include "groups.h"
-#include "control.h"
-#include "constants.h"
+#include "test_group.h"
+#include "resample_group.h"
+#include "settings.h"
 
 //for perf. counters
 #include <Windows.h>
@@ -26,15 +27,16 @@ using namespace std;
 void PrintInstructions()
 {
 	cout << endl << "MAIN MENU:" << endl
-		<< "// P --> Project    //" << endl
+		<< "// R --> Resample   //" << endl
+		<< "// T --> Test       //" << endl
 		<< "// Q --> Quit       //" << endl
 		<< endl;
 }
 
 int _tmain(int argc, TCHAR* argv[])
 {
-	prefs::ReadResamplePrefs();
-	(void)prefs::GetSignalTestDataPath();
+	settings::ReadResamplePrefs();
+	(void)settings::GetSignalTestDataPath();
 
 	srand(12345);
 	string input;
@@ -43,11 +45,17 @@ int _tmain(int argc, TCHAR* argv[])
 		int res = 0;
 		PrintInstructions();
 		cin >> input;
-		if (input == "P")
+		if (input == "R" || input == "R")
 		{
-			ControlObject = new ControlClass();
-			res = ControlObject->Run();
-			delete ControlObject;
+			ResampleGroupObject = new ResampleGroup();
+			res = ResampleGroupObject->Run();
+			delete ResampleGroupObject;
+		}
+		if (input == "T" || input == "t")
+		{
+			TestGroupObject = new TestGroup();
+			res = TestGroupObject->Run();
+			delete TestGroupObject;
 		}
 		if (input == "Q" || input == "q")
 		{
@@ -56,7 +64,7 @@ int _tmain(int argc, TCHAR* argv[])
 		cout << "Results (0 = success): \n" << res << endl;
 	} while (true);
 
-	prefs::WriteResamplePrefs();
+	settings::WriteResamplePrefs();
 	return 0;
 }
 

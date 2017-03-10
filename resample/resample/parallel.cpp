@@ -7,11 +7,24 @@
 #include "data.h"
 #include "profiler.h"
 #include "CL/cl.h"
-#include "constants.h"
+#include "settings.h"
 
 namespace
 {
 	const char* FILENAME = "resample.cl";
+}
+
+
+// Complete Resample in OpenCL
+cl_float* ResampleOcl(const std::string& inputFile, size_t inputRate, size_t outputRate, size_t order, cl_float** coeffs, bool verbose)
+{
+	return NULL;
+}
+
+// Run Function Placeholder
+int Run_ResampleOcl(ResultsStruct* results)
+{
+	return -1;
 }
 
 // Evaluate polynomial results for input values with coefficients in parallel
@@ -74,6 +87,42 @@ cl_float* PolyEvalOcl(cl_float* coeffs, size_t order, cl_float* input, size_t nu
 		LogError("Error: clReleaseMemObject returned '%s'.\n", TranslateOpenCLError(err));
 
     return output;
+}
+
+int Test_PolyEvalOcl(ResultsStruct* results)
+{
+	cl_float coeffs[] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f };
+	cl_float input[] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f };
+	cl_float Expected[] = { 36.0f, 1793.0f, 24604.0f, 167481.0f, 756836.0f, 2620201.0f, 7526268.0f, 18831569.0f, 42374116.0f, 87654321.0f };
+	cl_int numSamples = 10;
+	int order = 7;
+
+	ProfilerStruct profiler;
+	profiler.Start();
+
+	cl_float* Results = PolyEvalOcl(coeffs, order, input, numSamples);
+
+	profiler.Stop();
+	float runTime = profiler.Log();
+
+	if (tools::isEqual<float>(Results, Expected, numSamples))
+	{
+		std::cout << "SUCCESS!" << std::endl;
+	}
+	else
+	{
+		std::cout << "FAILURE!" << std::endl;
+		std::cout << "Expected: " << std::endl;
+		tools::printArray<float>(Expected, numSamples);
+		std::cout << "Actual: " << std::endl;
+		tools::printArray<float>(Results, numSamples);
+	}
+
+	results->WindowsRunTime = runTime;
+	results->HasWindowsRunTime = true;
+	results->OpenCLRunTime = 0;
+	results->HasOpenCLRunTime = false;
+	return 0;
 }
 
 // Multiplies two matrices together [A]*[B] where A is MxN and B is Nx1
@@ -143,42 +192,6 @@ float* MatrixMultiplierOcl(cl_uint rowsA, cl_uint colsA, float* matrixA, float* 
 	return matrixC;
 }
 
-int Test_PolyEvalOcl(ResultsStruct* results)
-{
-	cl_float coeffs[] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f };
-	cl_float input[] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f };
-	cl_float Expected[] = { 36.0f, 1793.0f, 24604.0f, 167481.0f, 756836.0f, 2620201.0f, 7526268.0f, 18831569.0f, 42374116.0f, 87654321.0f };
-	cl_int numSamples = 10;
-	int order = 7;
-
-	ProfilerStruct profiler;
-	profiler.Start();
-
-	cl_float* Results = PolyEvalOcl(coeffs, order, input, numSamples);
-
-	profiler.Stop();
-	float runTime = profiler.Log();
-
-	if (tools::isEqual<float>(Results, Expected, numSamples))
-	{
-		std::cout << "SUCCESS!" << std::endl;
-	}
-	else
-	{
-		std::cout << "FAILURE!" << std::endl;
-		std::cout << "Expected: " << std::endl;
-		tools::printArray<float>(Expected, numSamples);
-		std::cout << "Actual: " << std::endl;
-		tools::printArray<float>(Results, numSamples);
-	}
-
-	results->WindowsRunTime = runTime;
-	results->HasWindowsRunTime = true;
-	results->OpenCLRunTime = 0;
-	results->HasOpenCLRunTime = false;
-	return 0;
-}
-
 int Test_MatrixMultiplierOcl(ResultsStruct* results)
 {
 	cl_uint rowsA = 3;
@@ -220,6 +233,7 @@ int Test_MatrixMultiplierOcl(ResultsStruct* results)
 }
 
 ////////////////// RESAMPLE USING POLYNOMIAL APPROXIMATION /////////////////
+// DEPRECATED - ONLY HERE FOR REFERENCE - WILL BE DELETED SOON
 int exCL_Resample(ResultsStruct* results)
 {
 	cl_int err;
@@ -279,7 +293,7 @@ int exCL_Resample(ResultsStruct* results)
 	profiler.Stop();
 	float runTime = profiler.Log();
 
-	if (!SKIP_VERIFICATION)
+/*	if (!SKIP_VERIFICATION)
 	{
 		// Map Host Buffer to Local Data
 		cl_float* resultPtr = NULL;
@@ -293,19 +307,16 @@ int exCL_Resample(ResultsStruct* results)
 		// We mapped dstMem to resultPtr, so resultPtr is ready and includes the kernel output !!!
 		// Verify the results
 		bool failed = false;
-		/// @TODO WRITE SEQUENTIAL VERIFICATION CODE
-		/*
 		float cumSum = 0.0;
 		for (size_t i = 0; i < sampleSize; ++i)
 		{
-		cumSum += inputA[i];
-		if (resultPtr[i] != cumSum)
-		{
-		LogError("Verification failed at %d: Expected: %f. Actual: %f.\n", i, cumSum, resultPtr[i]);
-		failed = true;
+			cumSum += inputA[i];
+			if (resultPtr[i] != cumSum)
+			{
+				LogError("Verification failed at %d: Expected: %f. Actual: %f.\n", i, cumSum, resultPtr[i]);
+				failed = true;
+			}
 		}
-		}
-		*/
 		if (!failed)
 			LogInfo("Verification passed.\n");
 
@@ -313,6 +324,7 @@ int exCL_Resample(ResultsStruct* results)
 		if (CL_SUCCESS != UnmapHostBufferFromLocal(&ocl.commandQueue, &dstMem, resultPtr))
 			LogInfo("UnmapHostBufferFromLocal Failed.\n");
 	}
+*/
 
 	_aligned_free(inputA);
 	_aligned_free(outputC);

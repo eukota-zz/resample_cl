@@ -6,7 +6,7 @@
 #include "tools.h"
 #include "utils.h"
 #include "groups.h"
-#include "constants.h"
+#include "settings.h"
 
 ResultsStruct::ResultsStruct()
 	: WindowsRunTime(0.0)
@@ -117,7 +117,7 @@ int ProblemGroup::operator()(int problem)
 	return retVal;
 }
 GroupManager::GroupManager(const std::string& name)
-	: GroupName(name)
+	: group_name_(name)
 {
 }
 
@@ -129,7 +129,7 @@ GroupManager::~GroupManager()
 
 void GroupManager::PrintGroupMenu()
 {
-	std::cout << "Group: " << GroupName.c_str() << std::endl;
+	std::cout << "Group: " << group_name_.c_str() << std::endl;
 	for (std::map<int, ProblemGroup*>::const_iterator i = groups_.begin(), e = groups_.end(); i != e; ++i)
 	{
 		for (std::map<size_t, Problem*>::const_iterator g = i->second->problems_.begin(), h = i->second->problems_.end(); h != g; ++g)
@@ -142,12 +142,13 @@ void GroupManager::PrintGroupMenu()
 int GroupManager::Run()
 {
 	int result = 0;
-	std::cout << "Running new " << GroupName.c_str() << " Tests" << std::endl;
+	std::cout << "Running new " << group_name_.c_str() << " Tests" << std::endl;
+	PrintGroupMenu();
 	std::string input;
 	do
 	{
 		std::cout << "-------------------------------------------------------" << std::endl;
-		std::cout << "Enter " << ProblemGroupName().c_str() << "." << ProblemName().c_str() << " to run: " << std::endl;
+		std::cout << "Enter #.# to run (-1 to quit): " << std::endl;
 		std::cout << "(enter \"?\" for list of functions)" << std::endl;
 
 		std::cin >> input;
@@ -165,10 +166,11 @@ int GroupManager::Run()
 		std::cout << "-------------------------------------------------------" << std::endl;
 		if (groups_.find(problemgroup) == groups_.end())
 		{
-			std::cout << "WARNING: " << ProblemGroupName().c_str() << " " << problemgroup << " not found." << std::endl;
+			std::cout << "WARNING: " << GroupName().c_str() << " " << problemgroup << " not found." << std::endl;
 			continue;
 		}
-		std::cout << "Running " << ProblemGroupName() << " " << problemgroup << ": " /*<< ProblemName() << " " */ << groups_[problemgroup]->problems_[problem]->Annotation() << std::endl;
+		std::cout << "Running " << GroupName() << " " << problemgroup << "." << problem
+				  << ": " << groups_[problemgroup]->problems_[problem]->Annotation() << std::endl;
 		result = groups_[problemgroup]->operator()(problem);
 		if (result != 0)
 			LogInfo("Possible issue with result %d.\n", result);
@@ -180,44 +182,43 @@ int GroupManager::Run()
 /////////// Input Gathering /////////////
 ProblemGroup* GroupManagerInputControlFactory()
 {
-	// @TODO Modify structure so that input control annotation can print current value - will need a way to fetch current value - maybe mini-IOC?
 	int num = 0;
-	std::stringstream sampleSizeDesc;
-	sampleSizeDesc << "Set Sample Size (defaults to " << SAMPLE_SIZE << ")";
-	std::stringstream minDiffDesc;
-	minDiffDesc << "Set maximum difference for verifications (defaults to " << MAX_DIFF << ")";
-
 	ProblemGroup* InputControl = new ProblemGroup(0, "Input Control");
-	InputControl->problems_[++num] = new Problem(&SetSampleSize, sampleSizeDesc.str());
-	InputControl->problems_[++num] = new Problem(&ComparisonThreshold, minDiffDesc.str());
-	InputControl->problems_[++num] = new Problem(&SkipVerify, "Skip Verification (defaults to 0)");
-	InputControl->problems_[++num] = new Problem(&RunCount, "Set the number of runs (defaults to 1)");
-	InputControl->problems_[++num] = new Problem(&PrintResultsToFile, "Set times to print to file (defaults to 0).");
-	InputControl->problems_[++num] = new Problem(&SetResultsFile, "Set the file path for saving results.");
+	InputControl->problems_[++num] = new Problem(&SetSampleSize, "Set Signal Sample Size", &GetSampleSizeValueStr);
+	InputControl->problems_[++num] = new Problem(&ComparisonThreshold, "Set Maximum Difference for Float Verifications", &GetComparisonThresholdValueStr);
+	InputControl->problems_[++num] = new Problem(&RunCount, "Set Number of Runs", &GetRunCountValueStr);
+	InputControl->problems_[++num] = new Problem(&PrintResultsToFile, "Set to Print to File", &GetPrintResultsToFileValueStr);
+	InputControl->problems_[++num] = new Problem(&SetResultsFile, "Set File Path for Saving Results", &GetResultsFileValueStr);
 	return InputControl;
 }
 
+std::string GetSampleSizeValueStr()
+{
+	return std::to_string(SAMPLE_SIZE);
+}
 int SetSampleSize(ResultsStruct* results)
 {
-	std::cout << "Enter new sample size (current = " << SAMPLE_SIZE << "): ";
+	std::cout << "Enter new sample size: ";
 	std::cin >> SAMPLE_SIZE;
 	return 0;
 }
+
+std::string GetComparisonThresholdValueStr()
+{
+	return std::to_string(MAX_DIFF);
+}
 int ComparisonThreshold(ResultsStruct* results)
 {
-	std::cout << "Enter maximum difference value (currently " << MAX_DIFF << "): ";
+	std::cout << "Enter maximum difference value: ";
 	float i = MAX_DIFF;
 	std::cin >> i;
 	MAX_DIFF = i;
 	return 0;
 }
-int SkipVerify(ResultsStruct* results)
+
+std::string GetRunCountValueStr()
 {
-	std::cout << "Enter 1 to Skip Verification in functions. Enter 0 to Do Verification: ";
-	unsigned int i = (unsigned int)SKIP_VERIFICATION;
-	std::cin >> i;
-	SKIP_VERIFICATION = (i == 1);
-	return 0;
+	return std::to_string(RUN_COUNT);
 }
 int RunCount(ResultsStruct* results)
 {
@@ -227,17 +228,27 @@ int RunCount(ResultsStruct* results)
 	RUN_COUNT = i;
 	return 0;
 }
+
+std::string GetPrintResultsToFileValueStr()
+{
+	return std::to_string(PRINT_TO_FILE);
+}
 int PrintResultsToFile(ResultsStruct* results)
 {
-	std::cout << "Enter 1 to print results to file (currently " << PRINT_TO_FILE << "): ";
+	std::cout << "Enter 1 to print results to file: ";
 	unsigned int i = (unsigned int)PRINT_TO_FILE;
 	std::cin >> i;
 	PRINT_TO_FILE = (i == 1);
 	return 0;
 }
+
+std::string GetResultsFileValueStr()
+{
+	return RESULTS_FILE;
+}
 int SetResultsFile(ResultsStruct* results)
 {
-	std::cout << "Enter path to output file to (currently " << RESULTS_FILE << "): ";
+	std::cout << "Enter path to output file to: ";
 	char buffer[255];
 	std::cin >> buffer;
 	buffer[strcspn(buffer, "\n")] = 0;

@@ -3,6 +3,7 @@
 #include <vector>
 #include <fstream>
 #include "tools.h"
+#include "Shlwapi.h"
 
 #include "utils.h"
 
@@ -697,13 +698,25 @@ int Test_MatrixMultiplier(ResultsStruct* results)
 // Uses LoadSampleData() function with optional print bool set to true
 int Test_LoadDataFile(ResultsStruct* results)
 {
+	if (!PathFileExistsA(settings::GetSignalTestDataPath().c_str()))
+	{
+		std::cout << "FAILED: Signal Test Data File does not exist: " << settings::GetSignalTestDataPath() << std::endl;
+		return -1;
+	}
+	
 	// returns number of loaded
 	size_t rows = 0;
 	size_t cols = 0;
-	float* data = tools::LoadDataFile("..\\data\\default.csv", &rows, &cols);
-	std::cout << "Points Loaded: " << std::endl;
-	tools::printMatrix(data, rows, cols);
-	free(data);
+	float* data = tools::LoadDataFile(settings::GetSignalTestDataPath(), &rows, &cols);
+	if (data && cols && rows)
+	{
+		std::cout << "SUCCESS! Loaded Rows: " << rows << "; Loaded Cols: " << cols << std::endl;
+		free(data);
+	}
+	else
+	{
+		std::cout << "FAILED: Signal Test Data File loaded nothing \"" << settings::GetSignalTestDataPath() << "\"" << std::endl;
+	}
 	return 0;
 }
 

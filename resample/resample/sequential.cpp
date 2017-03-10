@@ -2,10 +2,35 @@
 #include "utils.h"
 #include "tools.h"
 #include "stdlib.h"
-#include "control.h"
+#include "test_group.h"
 #include "profiler.h"
 #include "groups.h"
 #include "CL/cl.h"
+
+// Performs all sequential steps up to QR Decomposition providing the QTranspose and R matrices
+bool Resample_ToQR(size_t inputRate, size_t order, size_t sampleCount, cl_float** QTranspose, cl_float** R)
+{
+	// create input time vector
+	const float inputTimeStep = 1 / (float)inputRate;
+	const float inputTimeEnd = (float)sampleCount / (float)inputRate;
+	float* inputTimes = tools::IncrementalArrayGenerator_ByStep(inputTimeStep, inputTimeEnd, inputTimeStep);
+	if (!inputTimes)
+		return false;
+
+	// create A matrix
+	float* matrixA = tools::GenerateAMatrix(inputTimes, sampleCount, order);
+	if (!matrixA)
+		return false;
+
+	// perform QR Decomposition to get QTranspose and R matrixes
+	*R = tools::CopyMatrix(matrixA, sampleCount, order + 1);
+	*QTranspose = tools::CreateIdentityMatrix(sampleCount);
+	QR(*R, *QTranspose, order + 1, sampleCount);
+	if (!(*R) || !(*QTranspose))
+		return false;
+
+	return true;
+}
 
 // Resample data from inputFile assuming inputRate and resampling at outputRate using LSA polynomial of order order
 // Writes results to directory named "inputFile" to be used for plotting
@@ -83,10 +108,10 @@ cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t output
 int Test_Resample(ResultsStruct* results)
 {
 	std::cout << "Test Resample: " << std::endl;
-	const std::string inputFile = prefs::GetSignalTestDataPath();
-	size_t inputRate = prefs::GetTestSampleInputRate();
-	size_t outputRate = prefs::GetTestSampleOutputRate();
-	size_t order = prefs::GetTestPolynomialOrder();
+	const std::string inputFile = settings::GetSignalTestDataPath();
+	size_t inputRate = settings::GetTestSampleInputRate();
+	size_t outputRate = settings::GetTestSampleOutputRate();
+	size_t order = settings::GetTestPolynomialOrder();
 	cl_float* coeffs = NULL;
 	const bool verbose = true; // force printing everything
 
@@ -101,7 +126,7 @@ int Test_Resample(ResultsStruct* results)
 	// Load And Verify Expected Coefficients Results
 	std::cout << "Verify Coefficients Match: ";
 	{
-		const std::string coeffsFile = prefs::GetCoeffsTestDataPath();
+		const std::string coeffsFile = settings::GetCoeffsTestDataPath();
 		size_t coeffsRows = 0;
 		size_t coeffsCols = 0;
 		cl_float* expectedCoeffs = tools::LoadDataFile(coeffsFile, &coeffsRows, &coeffsCols);
@@ -133,7 +158,7 @@ int Test_Resample(ResultsStruct* results)
 	// Load And Verify Signal Output Results
 	std::cout << "Verify Resample Results Match: ";
 	{
-		const std::string outputFile = prefs::GetOutputTestDataPath();
+		const std::string outputFile = settings::GetOutputTestDataPath();
 		size_t outputRows = 0;
 		size_t outputCols = 0;
 		cl_float* expectedOutput = tools::LoadDataFile(outputFile, &outputRows, &outputCols);

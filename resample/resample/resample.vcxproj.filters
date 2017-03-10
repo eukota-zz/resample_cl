@@ -36,9 +36,6 @@
     <ClCompile Include="groups.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="control.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="data.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -48,7 +45,13 @@
     <ClCompile Include="parallel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="constants.cpp">
+    <ClCompile Include="test_group.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="resample_group.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="settings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -71,9 +74,6 @@
     <ClInclude Include="groups.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="control.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -83,7 +83,13 @@
     <ClInclude Include="parallel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="constants.h">
+    <ClInclude Include="resample_group.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_group.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="settings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
