@@ -4,26 +4,26 @@ ActiveTab=resample
 [KBSession]
 KBTabs\2\TabFile=resample
 KBTabs\2\TabName=resample
-KBTabs\2\KBCache="&Resample$coeffs;t;result$float8;float*;float*$__private;__global;__global$NONE;NONE;NONE#progressiveArraySum$p1b_A;p1b_B$float*;float*$__global;__global$NONE;NONE"
-KBTabs\2\KBVarsByKernel="Resample#coeffs&3&1,2,3,4,5,6,7,0;t&0&buffer_1024_in;result&0&buffer_1024_out^progressiveArraySum#p1b_A&&;p1b_B&&"
-KBTabs\2\KBRefsByKernel="Resample#coeffs&;t&;result&D:\\Development\\resample_cl\\sessions\\resample\\bin_ref_buffer_1024_out0.bin^progressiveArraySum#p1b_A&;p1b_B&"
-KBTabs\2\KBGroupSizes=1024#0#0#Auto#0#0$0#0#0#0#0#0
-KBTabs\2\KBIterations=10#1
+KBTabs\2\KBCache="&MatrixMultiplier$matrixA;matrixB;matrixC;widthA;widthB$float*;float*;float*;uint;uint$__global;__global;__global;__private;__private$NONE;NONE;NONE;NONE;NONE#PolyEvalOcl$coeffs;order;input;result$float*;uint;float*;float*$__global;__private;__global;__global$NONE;NONE;NONE;NONE"
+KBTabs\2\KBVarsByKernel="MatrixMultiplier#matrixA&0&buffer_0_b;matrixB&0&buffer_1_b;matrixC&0&buffer_2_b;widthA&3&512;widthB&3&1^PolyEvalOcl#coeffs&0&PE_0_a;order&3&6;input&0&PE_1_a;result&0&PE_2_a"
+KBTabs\2\KBRefsByKernel="MatrixMultiplier#matrixA&;matrixB&;matrixC&D:\\Development\\resample_cl\\sessions\\resample\\bin_ref_buffer_2_b0.bin;widthA&;widthB&^PolyEvalOcl#coeffs&;order&;input&;result&D:\\Development\\resample_cl\\sessions\\resample\\bin_ref_PE_2_a0.bin"
+KBTabs\2\KBGroupSizes=262144#1#0#Auto#Auto#0$16384#0#0#Auto#0#0
+KBTabs\2\KBIterations=10#10
 KBTabs\2\KBConfigurationNames=config_0$config_0
 KBTabs\2\KBWorkFlows=
 KBTabs\2\KBWorkFlowsSetting=
-KBTabs\2\KBSelectedKernel=Resample
-KBTabs\2\TabCode="__kernel void Resample(float8 coeffs, __global float* t, __global float* result)\r\n{\r\n\tconst unsigned int id = get_global_id(0);\r\n\tfloat val = t[id];\r\n\tfloat out = 0;\r\n\tfor(unsigned int i=0; i<8; ++i)\r\n\t\tout += coeffs[i]*pow(val,i);\r\n\r\n\tresult[id] = out;\r\n}\r\n\r\n\r\n__kernel void progressiveArraySum(__global float* p1b_A, __global float* p1b_B)\r\n{\r\n\tconst unsigned int id = get_global_id(0);\r\n\r\n\tfloat out = 0.0;\r\n\tfor(unsigned int i=0; i<=id; i++)\r\n\t\tout += p1b_A[i];\r\n\r\n\tp1b_B[id] = out;\r\n}\r\n\r\n"
+KBTabs\2\KBSelectedKernel=PolyEvalOcl
+KBTabs\2\TabCode="\r\n// evaluates a polynomial with provided coefficients\r\n// eg: result[0] = a0*t^0 + a1*t^1 + a2*t^2 + .... an*t^n\r\n__kernel void PolyEvalOcl(__global float* coeffs, unsigned int order, __global float* input, __global float* result)\r\n{\r\n\tconst unsigned int id = get_global_id(0);\r\n\tfloat val = input[id];\r\n\tfloat out = 0;\r\n\tfor(unsigned int i=0; i<=order; ++i)\r\n\t\tout += coeffs[i]*pow(val,i);\r\n\r\n\tresult[id] = out;\r\n}\r\n\r\n// returns [A]*[B] = [C]\r\n// Assumption is that A = MxN and B = NxL and C = MxL\r\n__kernel void MatrixMultiplier(__global float* matrixA, __global float* matrixB, __global float* matrixC, unsigned int widthA, unsigned int widthB)\r\n{\r\n\tconst unsigned int rowC = get_global_id(0); // M\r\n\tconst unsigned int colC = get_global_id(1); // L\r\n\r\n\tfloat result = 0.0f;\r\n\tfor(unsigned int inner = 0; inner < widthA; ++inner)\r\n\t\tresult += matrixA[rowC*widthA + inner]*matrixB[inner*widthB + colC];\r\n\r\n\tmatrixC[rowC*widthB+colC] = result;\r\n\t//printf(\"running for (%d,%d): %f\\n\", rowC, colC, result);\r\n}"
 KBTabs\2\KBFacadeVisible=true
 KBTabs\2\IsValidation=true
 KBTabs\2\KBServerActive=true
-KBTabs\2\Artifacts="D:\\Development\\resample_cl\\sessions\\resample\\resample.ir;D:\\Development\\resample_cl\\sessions\\resample\\resample_progressiveArraySum.gen;D:\\Development\\resample_cl\\sessions\\resample\\resample_Resample.gen;D:\\Development\\resample_cl\\sessions\\resample\\resample.ll;D:\\Development\\resample_cl\\sessions\\resample\\resample_x64.ll;D:\\Development\\resample_cl\\sessions\\resample\\resample_x64.spir;D:\\Development\\resample_cl\\sessions\\resample\\resample_x86.ll;D:\\Development\\resample_cl\\sessions\\resample\\resample_x86.spir;D:\\Development\\resample_cl\\sessions\\resample\\resample_x86.spirv;D:\\Development\\resample_cl\\sessions\\resample\\resample_x64.spirv;"
-KBTabs\2\Reports="D:\\Development\\resample_cl\\sessions\\resample\\LastRunResults/Resample.cbreport;D:\\Development\\resample_cl\\sessions\\resample\\LastRunResults/Resample.cbreport;D:\\Development\\resample_cl\\sessions\\resample\\LastRunResults/Resample.cbreport;D:\\Development\\resample_cl\\sessions\\resample\\LastRunResults/Resample.cbreport;D:\\Development\\resample_cl\\sessions\\resample\\LastRunResults/Resample.cbreport;D:\\Development\\resample_cl\\sessions\\resample\\LastRunResults/Resample.cbreport;D:\\Development\\resample_cl\\sessions\\resample\\LastRunResults/Resample.cbreport;D:\\Development\\resample_cl\\sessions\\resample\\LastRunResults/Resample.cbreport;D:\\Development\\resample_cl\\sessions\\resample\\LastRunResults/Resample.cbreport;D:\\Development\\resample_cl\\sessions\\resample\\LastRunResults/Resample.cbreport;D:\\Development\\resample_cl\\sessions\\resample\\LastRunResults/Resample.cbreport;D:\\Development\\resample_cl\\sessions\\resample\\LastRunResults/Resample.cbreport"
-KBTabs\2\CLFiles=D:\\Development\\resample_cl\\resample\\resample\\resample.cl
+KBTabs\2\Artifacts="D:\\Development\\resample_cl\\sessions\\resample\\resample.ir;D:\\Development\\resample_cl\\sessions\\resample\\resample_MatrixMultiplier.gen;D:\\Development\\resample_cl\\sessions\\resample\\resample_PolyEvalOcl.gen;D:\\Development\\resample_cl\\sessions\\resample\\resample.ll;D:\\Development\\resample_cl\\sessions\\resample\\resample_x64.ll;D:\\Development\\resample_cl\\sessions\\resample\\resample_x64.spir;D:\\Development\\resample_cl\\sessions\\resample\\resample_x86.ll;D:\\Development\\resample_cl\\sessions\\resample\\resample_x86.spir;D:\\Development\\resample_cl\\sessions\\resample\\resample_x86.spirv;D:\\Development\\resample_cl\\sessions\\resample\\resample_x64.spirv;"
+KBTabs\2\Reports="D:\\Development\\resample_cl\\sessions\\resample\\LastRunResults/MatrixMultiplier.cbreport;D:\\Development\\resample_cl\\sessions\\resample\\LastRunResults/MatrixMultiplier.cbreport;D:\\Development\\resample_cl\\sessions\\resample\\LastRunResults/MatrixMultiplier.cbreport;D:\\Development\\resample_cl\\sessions\\resample\\LastRunResults/MatrixMultiplier.cbreport;D:\\Development\\resample_cl\\sessions\\resample\\LastRunResults/PolyEvalOcl.cbreport;D:\\Development\\resample_cl\\sessions\\resample\\LastRunResults/PolyEvalOcl.cbreport"
+KBTabs\2\CLFiles=D:\\Development\\resample_cl\\sessions\\resample\\resample.cl
 KBTabs\2\IsBinary=false
 KBTabs\2\TabOpt6=
 KBTabs\2\TabOpt7=2
-KBTabs\2\TabOpt10=(local) DESKTOP-S64PBL4
+KBTabs\2\TabOpt10=(local) DARRELL-ASUS
 KBTabs\2\TabOpt17=Intel(R) OpenCL
 KBTabs\2\TabOpt18=GPU: Intel(R) HD Graphics 5500
 KBTabs\2\TabOpt1=true
