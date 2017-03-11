@@ -8,7 +8,7 @@
 #include <iostream>
 #include <stack>
 
-#define VERBOSE_FILE_SAVE
+//#define VERBOSE_FILE_SAVE
 
 ResampleGroup* ResampleGroupObject;
 
@@ -70,7 +70,11 @@ cl_float* ResampleOcl(cl_float* signalInput, cl_float* QTranspose, cl_float* R, 
 	}
 
 #ifdef VERBOSE_FILE_SAVE
-	tools::SaveDataFile("\n\nQtb:\n", "..\\data\\verbose_output.txt", false);
+	tools::SaveDataFile("\n\QTranspose:\n", "..\\data\\verbose_output.txt", false);
+	tools::SaveDataFile(QTranspose, sampleInputCount, sampleInputCount, "..\\data\\verbose_output.txt", true);
+	tools::SaveDataFile("\n\R:\n", "..\\data\\verbose_output.txt", true);
+	tools::SaveDataFile(R, sampleInputCount, sampleOrder+1, "..\\data\\verbose_output.txt", true);
+	tools::SaveDataFile("\n\nQtb:\n", "..\\data\\verbose_output.txt", true);
 	tools::SaveDataFile(Qtb, sampleOutputCount, 1, "..\\data\\verbose_output.txt", true);
 	tools::SaveDataFile("\n\nCoeffs:\n", "..\\data\\verbose_output.txt", true);
 	tools::SaveDataFile(coeffsCalculated, sampleOrder+1, 1, "..\\data\\verbose_output.txt", true);
