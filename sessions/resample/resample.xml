@@ -2,27 +2,157 @@
 <!--  Kernel Builder Variables Database  -->
 <KernelBuilderBuffers>
     <BufferDetails>
-        <Name>buffer_1024_in</Name>
+        <Name>PE_0_a</Name>
         <DataType>float</DataType>
         <MemoryFlags>CL_MEM_USE_HOST_PTR</MemoryFlags>
         <AccessQualifier>READ_ONLY</AccessQualifier>
         <I_O_Mode>0</I_O_Mode>
-        <Source>D:\Development\resample_cl\sessions\resample\bin_buffer_1024_in.bin</Source>
+        <Source>D:\Development\resample_cl\sessions\resample\bin_PE_0_a.bin</Source>
         <ReadOutput>true</ReadOutput>
-        <BufferSize>1024</BufferSize>
+        <BufferSize>7</BufferSize>
         <InitByRandom>false</InitByRandom>
         <InitByZero>false</InitByZero>
         <UseAsSVM>false</UseAsSVM>
     </BufferDetails>
     <BufferDetails>
-        <Name>buffer_1024_out</Name>
+        <Name>PE_1_a</Name>
+        <DataType>float</DataType>
+        <MemoryFlags>CL_MEM_USE_HOST_PTR</MemoryFlags>
+        <AccessQualifier>READ_ONLY</AccessQualifier>
+        <I_O_Mode>0</I_O_Mode>
+        <Source>D:\Development\resample_cl\sessions\resample\bin_PE_1_a.bin</Source>
+        <ReadOutput>true</ReadOutput>
+        <BufferSize>16384</BufferSize>
+        <InitByRandom>false</InitByRandom>
+        <InitByZero>false</InitByZero>
+        <UseAsSVM>false</UseAsSVM>
+    </BufferDetails>
+    <BufferDetails>
+        <Name>PE_2_a</Name>
         <DataType>float</DataType>
         <MemoryFlags>CL_MEM_USE_HOST_PTR</MemoryFlags>
         <AccessQualifier>READ_ONLY</AccessQualifier>
         <I_O_Mode>1</I_O_Mode>
         <Source></Source>
         <ReadOutput>true</ReadOutput>
-        <BufferSize>1024</BufferSize>
+        <BufferSize>16384</BufferSize>
+        <InitByRandom>false</InitByRandom>
+        <InitByZero>false</InitByZero>
+        <UseAsSVM>false</UseAsSVM>
+    </BufferDetails>
+    <BufferDetails>
+        <Name>buffer_0</Name>
+        <DataType>float</DataType>
+        <MemoryFlags>CL_MEM_USE_HOST_PTR</MemoryFlags>
+        <AccessQualifier>READ_ONLY</AccessQualifier>
+        <I_O_Mode>0</I_O_Mode>
+        <Source>D:\Development\resample_cl\sessions\resample\bin_buffer_0.bin</Source>
+        <ReadOutput>true</ReadOutput>
+        <BufferSize>4194304</BufferSize>
+        <InitByRandom>false</InitByRandom>
+        <InitByZero>false</InitByZero>
+        <UseAsSVM>false</UseAsSVM>
+    </BufferDetails>
+    <BufferDetails>
+        <Name>buffer_0_a</Name>
+        <DataType>float</DataType>
+        <MemoryFlags>CL_MEM_USE_HOST_PTR</MemoryFlags>
+        <AccessQualifier>READ_ONLY</AccessQualifier>
+        <I_O_Mode>0</I_O_Mode>
+        <Source>D:\Development\resample_cl\sessions\resample\bin_buffer_0_a.bin</Source>
+        <ReadOutput>true</ReadOutput>
+        <BufferSize>16</BufferSize>
+        <InitByRandom>false</InitByRandom>
+        <InitByZero>false</InitByZero>
+        <UseAsSVM>false</UseAsSVM>
+    </BufferDetails>
+    <BufferDetails>
+        <Name>buffer_0_b</Name>
+        <DataType>float</DataType>
+        <MemoryFlags>CL_MEM_USE_HOST_PTR</MemoryFlags>
+        <AccessQualifier>READ_ONLY</AccessQualifier>
+        <I_O_Mode>0</I_O_Mode>
+        <Source>D:\Development\resample_cl\sessions\resample\bin_buffer_0_b.bin</Source>
+        <ReadOutput>true</ReadOutput>
+        <BufferSize>262144</BufferSize>
+        <InitByRandom>false</InitByRandom>
+        <InitByZero>false</InitByZero>
+        <UseAsSVM>false</UseAsSVM>
+    </BufferDetails>
+    <BufferDetails>
+        <Name>buffer_1</Name>
+        <DataType>float</DataType>
+        <MemoryFlags>CL_MEM_USE_HOST_PTR</MemoryFlags>
+        <AccessQualifier>READ_ONLY</AccessQualifier>
+        <I_O_Mode>0</I_O_Mode>
+        <Source>D:\Development\resample_cl\sessions\resample\bin_buffer_1.bin</Source>
+        <ReadOutput>true</ReadOutput>
+        <BufferSize>2048</BufferSize>
+        <InitByRandom>false</InitByRandom>
+        <InitByZero>false</InitByZero>
+        <UseAsSVM>false</UseAsSVM>
+    </BufferDetails>
+    <BufferDetails>
+        <Name>buffer_1_a</Name>
+        <DataType>float</DataType>
+        <MemoryFlags>CL_MEM_USE_HOST_PTR</MemoryFlags>
+        <AccessQualifier>READ_ONLY</AccessQualifier>
+        <I_O_Mode>0</I_O_Mode>
+        <Source>D:\Development\resample_cl\sessions\resample\bin_buffer_1_a.bin</Source>
+        <ReadOutput>true</ReadOutput>
+        <BufferSize>4</BufferSize>
+        <InitByRandom>false</InitByRandom>
+        <InitByZero>false</InitByZero>
+        <UseAsSVM>false</UseAsSVM>
+    </BufferDetails>
+    <BufferDetails>
+        <Name>buffer_1_b</Name>
+        <DataType>float</DataType>
+        <MemoryFlags>CL_MEM_USE_HOST_PTR</MemoryFlags>
+        <AccessQualifier>READ_ONLY</AccessQualifier>
+        <I_O_Mode>0</I_O_Mode>
+        <Source>D:\Development\resample_cl\sessions\resample\bin_buffer_1_b.bin</Source>
+        <ReadOutput>true</ReadOutput>
+        <BufferSize>512</BufferSize>
+        <InitByRandom>false</InitByRandom>
+        <InitByZero>false</InitByZero>
+        <UseAsSVM>false</UseAsSVM>
+    </BufferDetails>
+    <BufferDetails>
+        <Name>buffer_2</Name>
+        <DataType>float</DataType>
+        <MemoryFlags>CL_MEM_USE_HOST_PTR</MemoryFlags>
+        <AccessQualifier>READ_ONLY</AccessQualifier>
+        <I_O_Mode>1</I_O_Mode>
+        <Source></Source>
+        <ReadOutput>true</ReadOutput>
+        <BufferSize>2048</BufferSize>
+        <InitByRandom>false</InitByRandom>
+        <InitByZero>false</InitByZero>
+        <UseAsSVM>false</UseAsSVM>
+    </BufferDetails>
+    <BufferDetails>
+        <Name>buffer_2_a</Name>
+        <DataType>float</DataType>
+        <MemoryFlags>CL_MEM_USE_HOST_PTR</MemoryFlags>
+        <AccessQualifier>READ_ONLY</AccessQualifier>
+        <I_O_Mode>1</I_O_Mode>
+        <Source></Source>
+        <ReadOutput>true</ReadOutput>
+        <BufferSize>4</BufferSize>
+        <InitByRandom>false</InitByRandom>
+        <InitByZero>false</InitByZero>
+        <UseAsSVM>false</UseAsSVM>
+    </BufferDetails>
+    <BufferDetails>
+        <Name>buffer_2_b</Name>
+        <DataType>float</DataType>
+        <MemoryFlags>CL_MEM_USE_HOST_PTR</MemoryFlags>
+        <AccessQualifier>READ_ONLY</AccessQualifier>
+        <I_O_Mode>1</I_O_Mode>
+        <Source></Source>
+        <ReadOutput>true</ReadOutput>
+        <BufferSize>512</BufferSize>
         <InitByRandom>false</InitByRandom>
         <InitByZero>false</InitByZero>
         <UseAsSVM>false</UseAsSVM>

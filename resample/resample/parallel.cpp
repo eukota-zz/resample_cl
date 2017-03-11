@@ -66,8 +66,9 @@ cl_float* PolyEvalOcl(cl_float* coeffs, cl_uint order, cl_float* input, cl_uint 
 		return NULL;
 
 	// Enqueue Kernel
+	size_t localWorkSize[1] = { 16 }; // found via simulation
 	size_t globalWorkSize[1] = { numSamples };
-	if (CL_SUCCESS != ocl.ExecuteKernel(globalWorkSize, 1, NULL))
+	if (CL_SUCCESS != ocl.ExecuteKernel(globalWorkSize, 1, localWorkSize))
 		return NULL;
 
 	// Map Host Buffer to Local Data
@@ -197,8 +198,9 @@ cl_float* MatrixMultiplierOcl(cl_float* matrixA, cl_uint rowsA, cl_uint colsA, c
 
 
 	// Enqueue Kernel
+	size_t localWorkSize[2] = { 16, 1 }; // found via simulation
 	size_t globalWorkSize[2] = { rowsA, colsB };
-	if (CL_SUCCESS != ocl.ExecuteKernel(globalWorkSize, 2, NULL))
+	if (CL_SUCCESS != ocl.ExecuteKernel(globalWorkSize, 2, localWorkSize))
 		return NULL;
 
 	// Map Host Buffer to Local Data

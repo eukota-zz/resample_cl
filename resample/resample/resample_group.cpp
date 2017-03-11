@@ -83,7 +83,7 @@ cl_float* ResampleOcl(cl_float* signalInput, cl_float* QTranspose, cl_float* R, 
 	return outputSignal;
 }
 
-// Run Function Placeholder
+// Run Resample Function 
 int Run_ResampleOcl(ResultsStruct* results)
 {
 	tools::FreeMemoryFinalizer freeDeferred;
