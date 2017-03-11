@@ -39,12 +39,12 @@ std::map<int, ProblemGroup*> ResampleGroup::GroupFactory()
 }
 
 // Complete Resample in OpenCL
-cl_float* ResampleOcl(cl_float* signalInput, cl_float* QTranspose, cl_float* R, size_t sampleCount, size_t sampleOrder, cl_float* outputTimes)
+cl_float* ResampleOcl(cl_float* signalInput, cl_float* QTranspose, cl_float* R, size_t sampleInputCount, size_t sampleOutputCount, size_t sampleOrder, cl_float* outputTimes)
 {
 	tools::FreeMemoryFinalizer freeDeferred;
 
 	// OpenCL Multiply QTranspose by SignalData
-	cl_float* Qtb = MatrixMultiplierOcl(QTranspose, sampleCount, sampleCount, signalInput, sampleCount, 1);
+	cl_float* Qtb = MatrixMultiplierOcl(QTranspose, sampleInputCount, sampleInputCount, signalInput, sampleInputCount, 1);
 	if (!Qtb)
 	{
 		std::cout << "ERROR: QTranspose*Signals failed" << std::endl;
@@ -62,7 +62,7 @@ cl_float* ResampleOcl(cl_float* signalInput, cl_float* QTranspose, cl_float* R, 
 	freeDeferred.Add(coeffsCalculated);
 
 	// PolyEval to get Output Signal
-	cl_float* outputSignal = PolyEvalOcl(coeffsCalculated, sampleOrder, outputTimes, sampleCount);
+	cl_float* outputSignal = PolyEvalOcl(coeffsCalculated, sampleOrder, outputTimes, sampleOutputCount);
 	if (!outputSignal)
 	{
 		std::cout << "ERROR: PolyEvalOcl failed to return output signal" << std::endl;
@@ -71,7 +71,7 @@ cl_float* ResampleOcl(cl_float* signalInput, cl_float* QTranspose, cl_float* R, 
 
 #ifdef VERBOSE_FILE_SAVE
 	tools::SaveDataFile("\n\nQtb:\n", "..\\data\\verbose_output.txt", false);
-	tools::SaveDataFile(Qtb, sampleCount, 1, "..\\data\\verbose_output.txt", true);
+	tools::SaveDataFile(Qtb, sampleOutputCount, 1, "..\\data\\verbose_output.txt", true);
 	tools::SaveDataFile("\n\nCoeffs:\n", "..\\data\\verbose_output.txt", true);
 	tools::SaveDataFile(coeffsCalculated, sampleOrder+1, 1, "..\\data\\verbose_output.txt", true);
 #endif
@@ -124,7 +124,7 @@ int Run_ResampleOcl(ResultsStruct* results)
 	// Wrap the repeatable portion in the profiler
 	ProfilerStruct profiler;
 	profiler.Start();
-	cl_float* signalOut = ResampleOcl(signalInput, QTranspose, R, sampleCount, sampleOrder, OutputTimes);
+	cl_float* signalOut = ResampleOcl(signalInput, QTranspose, R, sampleCount, outputSampleCount, sampleOrder, OutputTimes);
 	profiler.Stop();
 	results->HasWindowsRunTime = true;
 	results->WindowsRunTime = profiler.Log();

@@ -32,7 +32,8 @@ cl_float* PolyEvalOcl(cl_float* coeffs, size_t order, cl_float* input, size_t nu
 	}
 
 	// Create OpenCL buffers from host memory for use by Kernel
-	cl_float8        coefficients = { coeffs[0], coeffs[1], coeffs[2], coeffs[3], coeffs[4], coeffs[5], coeffs[6], coeffs[7] };
+	// @todo FIX TO WORK WITH ORDER OTHER THAN 7 (KERNEL IS HARD CODED TO SIX FOR NOW)
+	cl_float8        coefficients = { coeffs[0], coeffs[1], coeffs[2], coeffs[3], coeffs[4], coeffs[5], coeffs[6], 0.0f };
 	cl_mem           srcOutputTimes;              // hold first source buffer
 	cl_mem           srcOutputSignal;            // hold destination buffer
 	if (CL_SUCCESS != CreateReadBufferArg(&ocl.context, &srcOutputTimes, input, (cl_uint)numSamples, 1))

@@ -7,9 +7,9 @@ clc
 %%% EDIT INPUTS %%%
 signalFilePath = "..\\resample\\data\\test_resample_input_signal_FULL.csv"; % 2048 sample points
 sampleCountIn = 200; % reduce input size since octave chokes on large inputs
-sampleRateIn = 200;
+sampleRateIn = 100;
 sampleRateOut = 50;
-order = 7;
+order = 6;
 %%%%%%%%%%%%%%%%%%%
 
 signalData=csvread(signalFilePath);
