@@ -9,24 +9,6 @@
 #include "CL/cl.h"
 #include "settings.h"
 
-namespace
-{
-	const char* FILENAME = "resample.cl";
-}
-
-
-// Complete Resample in OpenCL
-cl_float* ResampleOcl(const std::string& inputFile, size_t inputRate, size_t outputRate, size_t order, cl_float** coeffs, bool verbose)
-{
-	return NULL;
-}
-
-// Run Function Placeholder
-int Run_ResampleOcl(ResultsStruct* results)
-{
-	return -1;
-}
-
 // Evaluate polynomial results for input values with coefficients in parallel
 // @param[in] coeffs array of coefficients of size order+1
 // @param[in] order order of the polynomial
@@ -45,40 +27,40 @@ cl_float* PolyEvalOcl(cl_float* coeffs, size_t order, cl_float* input, size_t nu
 	cl_mem           srcA;              // hold first source buffer
 	cl_mem           dstMem;            // hold destination buffer
 	if (CL_SUCCESS != CreateReadBufferArg(&ocl.context, &srcA, input, (cl_uint)numSamples, 1))
-		return 0;
+		return NULL;
 	if (CL_SUCCESS != CreateWriteBufferArg(&ocl.context, &dstMem, output, (cl_uint)numSamples, 1))
-		return 0;
+		return NULL;
 
 	// Create and build the OpenCL program - imports named cl file.
-	if (CL_SUCCESS != ocl.CreateAndBuildProgram(FILENAME))
-		return 0;
+	if (CL_SUCCESS != ocl.CreateAndBuildProgram(CL_FILENAME))
+		return NULL;
 
 	// Create Kernel - kernel name must match kernel name in cl file
 	ocl.kernel = clCreateKernel(ocl.program, "PolyEvalOcl", &err);
 	if (CL_SUCCESS != err)
 	{
 		LogError("Error: clCreateKernel returned %s\n", TranslateOpenCLError(err));
-		return 0;
+		return NULL;
 	}
 
 	// Set OpenCL Kernel Arguments - Order Indicated by Final Argument
 	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &c, 0))
-		return 0;
+		return NULL;
 	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &srcA, 1))
-		return 0;
+		return NULL;
 	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &dstMem, 2))
-		return 0;
+		return NULL;
 
 	// Enqueue Kernel
 	size_t globalWorkSize[1] = { numSamples };
 	if (CL_SUCCESS != ocl.ExecuteKernel(globalWorkSize, 1, NULL))
-		return 0;
+		return NULL;
 
 	// Map Host Buffer to Local Data
 	if (CL_SUCCESS != MapHostBufferToLocal(&ocl.commandQueue, &dstMem, (cl_uint)numSamples, 1, &output))
 	{
 		LogError("Error: clEnqueueMapBuffer failed.\n");
-		return 0;
+		return NULL;
 	}
 
 	if (CL_SUCCESS != clReleaseMemObject(srcA))
@@ -144,44 +126,44 @@ float* MatrixMultiplierOcl(cl_uint rowsA, cl_uint colsA, float* matrixA, float* 
 	cl_mem           srcB;              // holds the B matrix buffer
 	cl_mem           dstMem;            // hold the C matrix buffer
 	if (CL_SUCCESS != CreateReadBufferArg(&ocl.context, &srcA, matrixA, rowsA * colsA, 1))
-		return 0;
+		return NULL;
 	if (CL_SUCCESS != CreateReadBufferArg(&ocl.context, &srcB, matrixB, colsA, 1))
-		return 0;
+		return NULL;
 	if (CL_SUCCESS != CreateWriteBufferArg(&ocl.context, &dstMem, matrixC, colsA, 1))
-		return 0;
+		return NULL;
 
 	// Create and build the OpenCL program - imports named cl file.
-	if (CL_SUCCESS != ocl.CreateAndBuildProgram(FILENAME))
-		return 0;
+	if (CL_SUCCESS != ocl.CreateAndBuildProgram(CL_FILENAME))
+		return NULL;
 
 	// Create Kernel - kernel name must match kernel name in cl file
 	ocl.kernel = clCreateKernel(ocl.program, "MatrixMultiplierOcl", &err);
 	if (CL_SUCCESS != err)
 	{
 		LogError("Error: clCreateKernel returned %s\n", TranslateOpenCLError(err));
-		return 0;
+		return NULL;
 	}
 
 	// Set OpenCL Kernel Arguments - Order Indicated by Final Argument
 	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &colsA, 0))
-		return 0;
+		return NULL;
 	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &srcA, 1))
-		return 0;
+		return NULL;
 	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &srcB, 2))
-		return 0;
+		return NULL;
 	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &dstMem, 3))
-		return 0;
+		return NULL;
 
 	// Enqueue Kernel
 	size_t globalWorkSize[1] = { colsA };
 	if (CL_SUCCESS != ocl.ExecuteKernel(globalWorkSize, 1, NULL))
-		return 0;
+		return NULL;
 
 	// Map Host Buffer to Local Data
 	if (CL_SUCCESS != MapHostBufferToLocal(&ocl.commandQueue, &dstMem, colsA, 1, &matrixC))
 	{
 		LogError("Error: clEnqueueMapBuffer failed.\n");
-		return 0;
+		return NULL;
 	}
 
 	if (CL_SUCCESS != clReleaseMemObject(srcA))
@@ -263,7 +245,7 @@ int exCL_Resample(ResultsStruct* results)
 		return -1;
 
 	// Create and build the OpenCL program - imports named cl file.
-	if (CL_SUCCESS != ocl.CreateAndBuildProgram(FILENAME))
+	if (CL_SUCCESS != ocl.CreateAndBuildProgram(CL_FILENAME))
 		return -1;
 
 	// Create Kernel - kernel name must match kernel name in cl file

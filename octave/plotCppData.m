@@ -4,10 +4,10 @@
 % Step 3: Run this file
 %
 
-signalDataIn=csvread("..\\resample\\data\\ResampleTest_signalIn.csv");
-timeIn=csvread("..\\resample\\data\\ResampleTest_timeIn.csv");
-signalDataOut=csvread("..\\resample\\data\\ResampleTest_signalOut.csv");
-timeOut=csvread("..\\resample\\data\\ResampleTest_timeOut.csv");
+signalDataIn=csvread("..\\resample\\data\\ResampleOutput_SignalIn.csv");
+timeIn=csvread("..\\resample\\data\\ResampleOutput_TimeIn.csv");
+signalDataOut=csvread("..\\resample\\data\\ResampleOutput_SignalOut.csv");
+timeOut=csvread("..\\resample\\data\\ResampleOutput_TimeOut.csv");
 
 
 figure

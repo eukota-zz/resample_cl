@@ -8,7 +8,7 @@
 #include <map>
 #include <string>
 
-#include "CL\cl.h"
+#include "CL/cl.h"
 #include "utils.h"
 #include "profiler.h"
 #include "tools.h"

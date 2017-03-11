@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <iomanip>
+#include <stack>
 #include "settings.h"
 
 namespace tools
@@ -9,6 +10,29 @@ namespace tools
 	float GetInput(const std::string& prompt);
 
 	std::vector<std::string> split(const std::string& str, const char* delim);
+
+	class FreeMemoryFinalizer
+	{
+	public:
+		void Add(void* f)
+		{
+			freeTargets.push(f);
+		}
+		~FreeMemoryFinalizer()
+		{
+			while (!freeTargets.empty())
+			{
+				void* f = freeTargets.top();
+				freeTargets.pop();
+				free(f);
+			}
+		}
+	private:
+		std::stack<void*> freeTargets;
+	};
+
+
+
 
 	// Print an array to std::cout
 	// @param[in] a array to print

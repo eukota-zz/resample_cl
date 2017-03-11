@@ -5,20 +5,21 @@
 #include "test_group.h"
 #include "profiler.h"
 #include "groups.h"
+#include "settings.h"
 #include "CL/cl.h"
 
-// Performs all sequential steps up to QR Decomposition providing the QTranspose and R matrices
-bool Resample_ToQR(size_t inputRate, size_t order, size_t sampleCount, cl_float** QTranspose, cl_float** R)
+// Performs all sequential steps up to QR Decomposition providing the QTranspose and R matrices and OutputTime vector
+bool Resample_ToQR(size_t inputRate, size_t outputRate, size_t order, size_t sampleCount, cl_float** QTranspose, cl_float** R, cl_float** OutputTimes, size_t* OutputSampleCount, cl_float** InputTimes)
 {
 	// create input time vector
 	const float inputTimeStep = 1 / (float)inputRate;
 	const float inputTimeEnd = (float)sampleCount / (float)inputRate;
-	float* inputTimes = tools::IncrementalArrayGenerator_ByStep(inputTimeStep, inputTimeEnd, inputTimeStep);
-	if (!inputTimes)
+	*InputTimes = tools::IncrementalArrayGenerator_ByStep(inputTimeStep, inputTimeEnd, inputTimeStep);
+	if (!(*InputTimes))
 		return false;
 
 	// create A matrix
-	float* matrixA = tools::GenerateAMatrix(inputTimes, sampleCount, order);
+	float* matrixA = tools::GenerateAMatrix(*InputTimes, sampleCount, order);
 	if (!matrixA)
 		return false;
 
@@ -27,6 +28,14 @@ bool Resample_ToQR(size_t inputRate, size_t order, size_t sampleCount, cl_float*
 	*QTranspose = tools::CreateIdentityMatrix(sampleCount);
 	QR(*R, *QTranspose, order + 1, sampleCount);
 	if (!(*R) || !(*QTranspose))
+		return false;
+
+	// Generate output sample times to evaulate at
+	const float outputTimeStep = 1.0f / (float)outputRate;
+	const float outputTimeEnd = inputTimeEnd;
+	*OutputSampleCount = (size_t)(outputTimeEnd * outputRate);
+	*OutputTimes = tools::IncrementalArrayGenerator_ByStep(outputTimeStep, outputTimeEnd, outputTimeStep);
+	if (!(*OutputTimes))
 		return false;
 
 	return true;
@@ -46,8 +55,9 @@ cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t output
 	size_t rows = 0;
 	size_t cols = 0;
 	float* signalData = tools::LoadDataFile(inputFile, &rows, &cols);
+	std::string t = settings::GetResampleOuputFile_SignalIn();
 	if (verbose)
-		tools::SaveDataFile(signalData, rows, cols, "..\\data\\ResampleTest_signalIn.csv", false);
+		tools::SaveDataFile(signalData, rows, cols, t, false);
 
 	if (cols > 1)
 	{
@@ -62,7 +72,7 @@ cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t output
 	const float inputTimeEnd = (float)sampleCount / (float)inputRate;
 	float* inputTimes = tools::IncrementalArrayGenerator_ByStep(inputTimeStep, inputTimeEnd, inputTimeStep);
 	if (verbose)
-		tools::SaveDataFile(inputTimes, sampleCount, 1, "..\\data\\ResampleTest_timeIn.csv", false);
+		tools::SaveDataFile(inputTimes, sampleCount, 1, settings::GetResampleOuputFile_TimeIn(), false);
 
 	// create A matrix
 	float* matrixA = tools::GenerateAMatrix(inputTimes, sampleCount, order);
@@ -84,12 +94,12 @@ cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t output
 	const size_t outputSampleSize = (size_t)(outputTimeEnd * outputRate);
 	cl_float* outputTimeValues = tools::IncrementalArrayGenerator_ByStep(outputTimeStep, outputTimeEnd, outputTimeStep);
 	if (verbose)
-		tools::SaveDataFile(outputTimeValues, outputSampleSize, 1, "..\\data\\ResampleTest_timeOut.csv", false);
+		tools::SaveDataFile(outputTimeValues, outputSampleSize, 1, settings::GetResampleOuputFile_TimeOut(), false);
 
 	// perform PolyEval to get new values
 	cl_float* outputData = PolyEval(coeffsCalculated, order, outputTimeValues, outputSampleSize);
 	if (verbose)
-		tools::SaveDataFile(outputData, outputSampleSize, 1, "..\\data\\ResampleTest_signalOut.csv", false);
+		tools::SaveDataFile(outputData, outputSampleSize, 1, settings::GetResampleOuputFile_SignalOut(), false);
 
 	*coeffs = tools::CopyMatrix(coeffsCalculated, order + 1, 1);
 

@@ -2,6 +2,8 @@
 #include <string>
 // CONSTANTS
 extern const float PI;
+extern const char* CL_FILENAME;
+
 
 // SETTINGS
 extern int SAMPLE_SIZE;
@@ -9,6 +11,7 @@ extern bool PRINT_TO_FILE;
 extern std::string RESULTS_FILE;
 extern unsigned int RUN_COUNT;
 extern float MAX_DIFF;
+
 
 namespace settings
 {
@@ -21,9 +24,15 @@ namespace settings
 	bool PrefFileExists(const std::string& prefFile);
 	bool CreatePrefFile(const std::string& prefFile);
 
+	// READ ONCE ON STARTUP
 	void WriteResamplePrefs();
 	void ReadResamplePrefs();
 
+		// READ ON THE FLY - Can update INI and these will be reread next read
+	std::string GetResampleOuputFile_TimeIn();
+	std::string GetResampleOuputFile_SignalIn();
+	std::string GetResampleOuputFile_TimeOut();
+	std::string GetResampleOuputFile_SignalOut();
 	void WriteOctavePrefsDefaults();
 	std::string GetTestDataPath(const std::string& dataKey);
 	std::string GetSignalTestDataPath();
@@ -32,4 +41,5 @@ namespace settings
 	int GetTestSampleInputRate();
 	int GetTestSampleOutputRate();
 	int GetTestPolynomialOrder();
+
 }

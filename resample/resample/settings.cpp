@@ -5,6 +5,7 @@
 
 // CONSTANTS
 const float PI = 3.14159265358979323846f;
+const char* CL_FILENAME = "resample.cl";
 
 // SETTINGS
 int SAMPLE_SIZE = 1024;
@@ -23,6 +24,10 @@ namespace
 	const char* PREF_RESULTS_FILE = "ResultsFile";
 	const char* PREF_RUN_COUNT = "RunCount";
 	const char* PREF_MAX_DIFF = "MaxDiff";
+	const char* PREF_OUTPUT_SIGNALIN = "OutputFile_SignalIn";
+	const char* PREF_OUTPUT_TIMEIN = "OutputFile_TimeIn";
+	const char* PREF_OUTPUT_SIGNALOUT = "OutputFile_SignalOut";
+	const char* PREF_OUTPUT_TIMEOUT = "OutputFile_TimeOut";
 
 	// Data File Locations
 	const char* OCTAVE_APP = "Octave";
@@ -90,21 +95,29 @@ namespace settings
 
 	void WriteResamplePrefs()
 	{
+		const std::string prefFilePath = PrefFilePath(PREF_FILE);
+
 		std::string output;
 
 		output = std::to_string(SAMPLE_SIZE);
-		WritePrivateProfileStringA(PREF_APP, PREF_SAMPLE_SIZE, output.c_str(), PrefFilePath(PREF_FILE).c_str());
+		WritePrivateProfileStringA(PREF_APP, PREF_SAMPLE_SIZE, output.c_str(), prefFilePath.c_str());
 
 		output = (PRINT_TO_FILE ? "1" : "0");
-		WritePrivateProfileStringA(PREF_APP, PREF_PRINT_TO_FILE, output.c_str(), PrefFilePath(PREF_FILE).c_str());
+		WritePrivateProfileStringA(PREF_APP, PREF_PRINT_TO_FILE, output.c_str(), prefFilePath.c_str());
 
-		WritePrivateProfileStringA(PREF_APP, PREF_RESULTS_FILE, RESULTS_FILE.c_str(), PrefFilePath(PREF_FILE).c_str());
+		WritePrivateProfileStringA(PREF_APP, PREF_RESULTS_FILE, RESULTS_FILE.c_str(), prefFilePath.c_str());
 
 		output = std::to_string(RUN_COUNT);
-		WritePrivateProfileStringA(PREF_APP, PREF_RUN_COUNT, output.c_str(), PrefFilePath(PREF_FILE).c_str());
+		WritePrivateProfileStringA(PREF_APP, PREF_RUN_COUNT, output.c_str(), prefFilePath.c_str());
 
 		output = std::to_string(MAX_DIFF);
-		WritePrivateProfileStringA(PREF_APP, PREF_MAX_DIFF, output.c_str(), PrefFilePath(PREF_FILE).c_str());
+		WritePrivateProfileStringA(PREF_APP, PREF_MAX_DIFF, output.c_str(), prefFilePath.c_str());
+
+		// Output Data
+		WritePrivateProfileStringA(PREF_APP, PREF_OUTPUT_TIMEIN, "..\\data\\ResampleOutput_TimeIn.csv", prefFilePath.c_str());
+		WritePrivateProfileStringA(PREF_APP, PREF_OUTPUT_SIGNALIN, "..\\data\\ResampleOutput_SignalIn.csv", prefFilePath.c_str());
+		WritePrivateProfileStringA(PREF_APP, PREF_OUTPUT_TIMEOUT, "..\\data\\ResampleOutput_TimeOut.csv", prefFilePath.c_str());
+		WritePrivateProfileStringA(PREF_APP, PREF_OUTPUT_SIGNALOUT, "..\\data\\ResampleOutput_SignalOut.csv", prefFilePath.c_str());
 	}
 
 	// loads settings from PREF_FILE. If file does not exist, creates file with default values
@@ -121,6 +134,26 @@ namespace settings
 		RUN_COUNT = GetIntFromPrefs(PrefFilePath(PREF_FILE), PREF_APP, PREF_RUN_COUNT, RUN_COUNT);
 		MAX_DIFF = GetFloatFromPrefs(PrefFilePath(PREF_FILE), PREF_APP, PREF_MAX_DIFF, MAX_DIFF);
 	}
+	// Output Data Files
+	std::string GetResampleOuputFile_TimeIn()
+	{
+		return GetStringFromPrefs(PrefFilePath(PREF_FILE), PREF_APP, PREF_OUTPUT_TIMEIN, RESULTS_FILE);
+	}
+
+	std::string GetResampleOuputFile_SignalIn()
+	{
+		return GetStringFromPrefs(PrefFilePath(PREF_FILE), PREF_APP, PREF_OUTPUT_SIGNALIN, RESULTS_FILE);
+	}
+
+	std::string GetResampleOuputFile_TimeOut()
+	{
+		return GetStringFromPrefs(PrefFilePath(PREF_FILE), PREF_APP, PREF_OUTPUT_TIMEOUT, RESULTS_FILE);
+	}
+
+	std::string GetResampleOuputFile_SignalOut()
+	{
+		return GetStringFromPrefs(PrefFilePath(PREF_FILE), PREF_APP, PREF_OUTPUT_SIGNALOUT, RESULTS_FILE);
+	}
 
 
 	//////////////////// DATA SETTINGS ////////////////////////
@@ -135,6 +168,7 @@ namespace settings
 		WritePrivateProfileStringA(OCTAVE_APP, PREF_SAMPLE_OUTPUT_RATE, std::to_string(50).c_str(), prefFilePath.c_str());
 		WritePrivateProfileStringA(OCTAVE_APP, PREF_POLYNOMIAL_ORDER, std::to_string(7).c_str(), prefFilePath.c_str());
 	}
+	
 	// Reads from Octave.ini
 	std::string GetTestDataPath(const std::string& dataKey)
 	{
