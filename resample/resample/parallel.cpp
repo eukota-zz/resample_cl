@@ -20,15 +20,24 @@ cl_float* PolyEvalOcl(cl_float* coeffs, size_t order, cl_float* input, size_t nu
 	cl_int err;
 	ocl_args ocl(CL_DEVICE_TYPE_GPU);
 
-	cl_float* output = (cl_float*)malloc(numSamples * sizeof(cl_float));
+	// Create Local Variabels and Allocate Memory
+	cl_uint optimizedSize = ((sizeof(cl_float)*numSamples - 1) / 64 + 1) * 64;
+	cl_float* outputSignalData = (cl_float*)_aligned_malloc(optimizedSize, 4096);
+	// coefficients are function argument
+	// input is function argument
+	if (!coeffs || !order || !input || !numSamples)
+	{
+		LogError("Error: invalid data input)");
+		return NULL;
+	}
 
 	// Create OpenCL buffers from host memory for use by Kernel
-	cl_float8        c = { coeffs[0], coeffs[1], coeffs[2], coeffs[3], coeffs[4], coeffs[5], coeffs[6], coeffs[7] };
-	cl_mem           srcA;              // hold first source buffer
-	cl_mem           dstMem;            // hold destination buffer
-	if (CL_SUCCESS != CreateReadBufferArg(&ocl.context, &srcA, input, (cl_uint)numSamples, 1))
+	cl_float8        coefficients = { coeffs[0], coeffs[1], coeffs[2], coeffs[3], coeffs[4], coeffs[5], coeffs[6], coeffs[7] };
+	cl_mem           srcOutputTimes;              // hold first source buffer
+	cl_mem           srcOutputSignal;            // hold destination buffer
+	if (CL_SUCCESS != CreateReadBufferArg(&ocl.context, &srcOutputTimes, input, (cl_uint)numSamples, 1))
 		return NULL;
-	if (CL_SUCCESS != CreateWriteBufferArg(&ocl.context, &dstMem, output, (cl_uint)numSamples, 1))
+	if (CL_SUCCESS != CreateWriteBufferArg(&ocl.context, &srcOutputSignal, outputSignalData, (cl_uint)numSamples, 1))
 		return NULL;
 
 	// Create and build the OpenCL program - imports named cl file.
@@ -44,11 +53,11 @@ cl_float* PolyEvalOcl(cl_float* coeffs, size_t order, cl_float* input, size_t nu
 	}
 
 	// Set OpenCL Kernel Arguments - Order Indicated by Final Argument
-	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &c, 0))
+	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &coefficients, 0))
 		return NULL;
-	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &srcA, 1))
+	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &srcOutputTimes, 1))
 		return NULL;
-	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &dstMem, 2))
+	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &srcOutputSignal, 2))
 		return NULL;
 
 	// Enqueue Kernel
@@ -57,18 +66,29 @@ cl_float* PolyEvalOcl(cl_float* coeffs, size_t order, cl_float* input, size_t nu
 		return NULL;
 
 	// Map Host Buffer to Local Data
-	if (CL_SUCCESS != MapHostBufferToLocal(&ocl.commandQueue, &dstMem, (cl_uint)numSamples, 1, &output))
+	cl_float* resultPtr = NULL;
+	if (CL_SUCCESS != MapHostBufferToLocal(&ocl.commandQueue, &srcOutputSignal, (cl_uint)numSamples, 1, &resultPtr))
 	{
 		LogError("Error: clEnqueueMapBuffer failed.\n");
 		return NULL;
 	}
+	
+	// Copy Data
+	cl_float* returnData = tools::CopyMatrix(resultPtr, numSamples, 1);
 
-	if (CL_SUCCESS != clReleaseMemObject(srcA))
-		LogError("Error: clReleaseMemObject returned '%s'.\n", TranslateOpenCLError(err));
-	if (CL_SUCCESS != clReleaseMemObject(dstMem))
-		LogError("Error: clReleaseMemObject returned '%s'.\n", TranslateOpenCLError(err));
+	// Unmap Host Buffer from Local Data
+	if (CL_SUCCESS != UnmapHostBufferFromLocal(&ocl.commandQueue, &srcOutputSignal, resultPtr))
+		LogInfo("UnmapHostBufferFromLocal Failed.\n");
 
-    return output;
+	// Free Memory
+	_aligned_free(outputSignalData);
+
+	if (CL_SUCCESS != clReleaseMemObject(srcOutputTimes))
+		LogError("Error: clReleaseMemObject returned '%s'.\n", TranslateOpenCLError(err));
+	if (CL_SUCCESS != clReleaseMemObject(srcOutputSignal))
+		LogError("Error: clReleaseMemObject returned '%s'.\n", TranslateOpenCLError(err));
+	
+    return returnData;
 }
 
 int Test_PolyEvalOcl(ResultsStruct* results)
@@ -114,22 +134,31 @@ int Test_PolyEvalOcl(ResultsStruct* results)
 // @param[in] matrixB right colunm vector
 // @return output result
 // NOTE: CALLER TAKES OWNERSHIP OF RETURN VALUE
-float* MatrixMultiplierOcl(cl_uint rowsA, cl_uint colsA, float* matrixA, float* matrixB)
+cl_float* MatrixMultiplierOcl(cl_float* matrixA, cl_uint rowsA, cl_uint colsA, cl_float* matrixB, cl_uint rowsB, cl_uint colsB)
 {
 	cl_int err;
 	ocl_args ocl(CL_DEVICE_TYPE_GPU);
 
-	cl_float* matrixC = (cl_float*)malloc(colsA * sizeof(cl_float));
+	// Create Local Variabels and Allocate Memory
+	cl_uint optimizedSize = ((sizeof(cl_float)*rowsA*colsB - 1) / 64 + 1) * 64;
+	cl_float* matrixC = (cl_float*)_aligned_malloc(optimizedSize, 4096);
+	cl_uint widthA = colsA;
+	cl_uint widthB = colsB;
+	if(!matrixA || !rowsA || !colsA || !matrixB || !rowsB || !colsB || colsA != rowsB)
+	{
+		LogError("Error: invalid data input)");
+		return NULL;
+	}
 
 	// Create OpenCL buffers from host memory for use by Kernel
-	cl_mem           srcA;              // hold the A matrix buffer
-	cl_mem           srcB;              // holds the B matrix buffer
-	cl_mem           dstMem;            // hold the C matrix buffer
-	if (CL_SUCCESS != CreateReadBufferArg(&ocl.context, &srcA, matrixA, rowsA * colsA, 1))
+	cl_mem           srcMatrixA;              // hold the A matrix buffer
+	cl_mem           srcMatrixB;              // holds the B matrix buffer
+	cl_mem           dstMatrixC;            // hold the C matrix buffer
+	if (CL_SUCCESS != CreateReadBufferArg(&ocl.context, &srcMatrixA, matrixA, colsA, rowsA))
 		return NULL;
-	if (CL_SUCCESS != CreateReadBufferArg(&ocl.context, &srcB, matrixB, colsA, 1))
+	if (CL_SUCCESS != CreateReadBufferArg(&ocl.context, &srcMatrixB, matrixB, colsB, rowsB))
 		return NULL;
-	if (CL_SUCCESS != CreateWriteBufferArg(&ocl.context, &dstMem, matrixC, colsA, 1))
+	if (CL_SUCCESS != CreateWriteBufferArg(&ocl.context, &dstMatrixC, matrixC, colsA, rowsB))
 		return NULL;
 
 	// Create and build the OpenCL program - imports named cl file.
@@ -137,7 +166,7 @@ float* MatrixMultiplierOcl(cl_uint rowsA, cl_uint colsA, float* matrixA, float* 
 		return NULL;
 
 	// Create Kernel - kernel name must match kernel name in cl file
-	ocl.kernel = clCreateKernel(ocl.program, "MatrixMultiplierOcl", &err);
+	ocl.kernel = clCreateKernel(ocl.program, "MatrixMultiplier", &err);
 	if (CL_SUCCESS != err)
 	{
 		LogError("Error: clCreateKernel returned %s\n", TranslateOpenCLError(err));
@@ -145,33 +174,46 @@ float* MatrixMultiplierOcl(cl_uint rowsA, cl_uint colsA, float* matrixA, float* 
 	}
 
 	// Set OpenCL Kernel Arguments - Order Indicated by Final Argument
-	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &colsA, 0))
+	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &srcMatrixA, 0))
 		return NULL;
-	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &srcA, 1))
+	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &srcMatrixB, 1))
 		return NULL;
-	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &srcB, 2))
+	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &dstMatrixC, 2))
 		return NULL;
-	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &dstMem, 3))
+	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &widthA, 3))
+		return NULL;
+	if (CL_SUCCESS != SetKernelArgument(&ocl.kernel, &widthB, 4))
 		return NULL;
 
+
 	// Enqueue Kernel
-	size_t globalWorkSize[1] = { colsA };
-	if (CL_SUCCESS != ocl.ExecuteKernel(globalWorkSize, 1, NULL))
+	size_t globalWorkSize[2] = { rowsA, colsB };
+	if (CL_SUCCESS != ocl.ExecuteKernel(globalWorkSize, 2, NULL))
 		return NULL;
 
 	// Map Host Buffer to Local Data
-	if (CL_SUCCESS != MapHostBufferToLocal(&ocl.commandQueue, &dstMem, colsA, 1, &matrixC))
+	cl_float* resultPtr = NULL;
+	if (CL_SUCCESS != MapHostBufferToLocal(&ocl.commandQueue, &dstMatrixC, colsA, 1, &resultPtr))
 	{
 		LogError("Error: clEnqueueMapBuffer failed.\n");
 		return NULL;
 	}
+	cl_float* returnData = tools::CopyMatrix(resultPtr, colsA, 1);
+	// Unmap Host Buffer from Local Data
+	if (CL_SUCCESS != UnmapHostBufferFromLocal(&ocl.commandQueue, &dstMatrixC, resultPtr))
+		LogInfo("UnmapHostBufferFromLocal Failed.\n");
 
-	if (CL_SUCCESS != clReleaseMemObject(srcA))
+	_aligned_free(matrixC);
+
+	if (CL_SUCCESS != clReleaseMemObject(srcMatrixA))
 		LogError("Error: clReleaseMemObject returned '%s'.\n", TranslateOpenCLError(err));
-	if (CL_SUCCESS != clReleaseMemObject(dstMem))
+	if (CL_SUCCESS != clReleaseMemObject(srcMatrixB))
+		LogError("Error: clReleaseMemObject returned '%s'.\n", TranslateOpenCLError(err));
+	if (CL_SUCCESS != clReleaseMemObject(dstMatrixC))
 		LogError("Error: clReleaseMemObject returned '%s'.\n", TranslateOpenCLError(err));
 
-	return matrixC;
+
+	return returnData;
 }
 
 int Test_MatrixMultiplierOcl(ResultsStruct* results)
@@ -182,14 +224,18 @@ int Test_MatrixMultiplierOcl(ResultsStruct* results)
 					       4, 5, 6,
 						   7, 8, 9 };
 
-	cl_float matrixB[3] = { 1, 2, 3 };
+	cl_uint rowsB = 3;
+	cl_uint colsB = 1;
+	cl_float matrixB[3] = { 1,
+							2,
+							3 };
 
 	cl_float Expected[] = { 14, 32, 50 };
 
 	ProfilerStruct profiler;
 	profiler.Start();
 
-	cl_float* Results = MatrixMultiplierOcl(rowsA, colsA, matrixA, matrixB);
+	cl_float* Results = MatrixMultiplierOcl(matrixA, rowsA, colsA, matrixB, rowsB, colsB);
 
 	profiler.Stop();
 	float runTime = profiler.Log();

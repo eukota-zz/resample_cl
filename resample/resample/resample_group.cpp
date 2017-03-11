@@ -44,7 +44,7 @@ cl_float* ResampleOcl(cl_float* signalInput, cl_float* QTranspose, cl_float* R, 
 	tools::FreeMemoryFinalizer freeDeferred;
 
 	// OpenCL Multiply QTranspose by SignalData
-	cl_float* Qtb = MatrixMultiplierOcl(sampleCount, sampleCount, QTranspose, signalInput);
+	cl_float* Qtb = MatrixMultiplierOcl(QTranspose, sampleCount, sampleCount, signalInput, sampleCount, 1);
 	if (!Qtb)
 	{
 		std::cout << "ERROR: QTranspose*Signals failed" << std::endl;
