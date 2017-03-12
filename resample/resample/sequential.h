@@ -7,7 +7,7 @@ struct ResultsStruct;
 
 // Resample
 bool Resample_ToQR(size_t inputRate, size_t outputRate, size_t order, size_t sampleCount, cl_float** QTranspose, cl_float** R, cl_float** OutputTimes, size_t* OutputSampleCount, cl_float** InputTimes);
-cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t outputRate, size_t order, cl_float** coeffs, bool verbose = false);
+cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t outputRate, size_t order, cl_float** coeffs, bool verbose = false, ResultsStruct* results = NULL);
 int Test_Resample(ResultsStruct* results);
 
 // QR Decomposition

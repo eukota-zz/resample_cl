@@ -49,12 +49,15 @@ bool Resample_ToQR(size_t inputRate, size_t outputRate, size_t order, size_t sam
 // @param[in] order polynomial order to use
 // @param[out] coeffs coefficients of LSA polynomial
 // @return resampled data
-cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t outputRate, size_t order, cl_float** coeffs, bool verbose)
+cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t outputRate, size_t order, cl_float** coeffs, bool verbose, ResultsStruct* results)
 {
+	ProfilerStruct profiler;
 	// Load Signal Data
 	size_t rows = 0;
 	size_t cols = 0;
+	(void)profiler.Lap();
 	float* signalData = tools::LoadDataFile(inputFile, &rows, &cols);
+	results->AddRunTime(profiler.Lap(), "LoadDataFile signalData Time");
 	std::string t = settings::GetResampleOuputFile_SignalIn();
 	if (verbose)
 		tools::SaveDataFile(signalData, rows, cols, t, false);
@@ -68,36 +71,55 @@ cl_float* Resample(const std::string& inputFile, size_t inputRate, size_t output
 	const size_t sampleCount = rows;
 
 	// create input time vector
+	(void)profiler.Lap();
 	const float inputTimeStep = 1 / (float)inputRate;
 	const float inputTimeEnd = (float)sampleCount / (float)inputRate;
 	float* inputTimes = tools::IncrementalArrayGenerator_ByStep(inputTimeStep, inputTimeEnd, inputTimeStep);
+	results->AddRunTime(profiler.Lap(), "Generate Input Times Time");
 	if (verbose)
 		tools::SaveDataFile(inputTimes, sampleCount, 1, settings::GetResampleOuputFile_TimeIn(), false);
 
 	// create A matrix
+	(void)profiler.Lap();
 	float* matrixA = tools::GenerateAMatrix(inputTimes, sampleCount, order);
+	results->AddRunTime(profiler.Lap(), "A Matrix Generation Time");
 
 	// perform QR to get Q and R matrixes
+	(void)profiler.Lap();
 	cl_float* R = tools::CopyMatrix(matrixA, sampleCount, order + 1);
 	cl_float* QTranspose = tools::CreateIdentityMatrix(sampleCount);
 	QR(R, QTranspose, order+1, sampleCount); // outputs QTranspose
-
-	// multiply Q by signal input data to get Qtb
-	cl_float* Qtb = tools::MatrixMultiplier(QTranspose, sampleCount, sampleCount, signalData, sampleCount, 1);
-
-	// perform BackSub to get coefficients
-	cl_float* coeffsCalculated = BackSub(R, Qtb, order+1);
+	results->AddRunTime(profiler.Lap(), "QR Decomposition Time");
 
 	// Generate output sample times to evaulate at
+	(void)profiler.Lap();
 	const float outputTimeStep = 1.0f / (float)outputRate;
 	const float outputTimeEnd = inputTimeEnd;
 	const size_t outputSampleSize = (size_t)(outputTimeEnd * outputRate);
 	cl_float* outputTimeValues = tools::IncrementalArrayGenerator_ByStep(outputTimeStep, outputTimeEnd, outputTimeStep);
+	results->AddRunTime(profiler.Lap(), "Output Time Generation Time");
 	if (verbose)
 		tools::SaveDataFile(outputTimeValues, outputSampleSize, 1, settings::GetResampleOuputFile_TimeOut(), false);
 
+
+	// START REPEAT REGION
+	profiler.Start();
+	// multiply Q by signal input data to get Qtb
+	(void)profiler.Lap();
+	cl_float* Qtb = tools::MatrixMultiplier(QTranspose, sampleCount, sampleCount, signalData, sampleCount, 1);
+	results->AddRunTime(profiler.Lap(), "QTranspose * b Time");
+
+	// perform BackSub to get coefficients
+	(void)profiler.Lap();
+	cl_float* coeffsCalculated = BackSub(R, Qtb, order+1);
+	results->AddRunTime(profiler.Lap(), "BackSub Time");
+
 	// perform PolyEval to get new values
+	(void)profiler.Lap();
 	cl_float* outputData = PolyEval(coeffsCalculated, order, outputTimeValues, outputSampleSize);
+	results->AddRunTime(profiler.Lap(), "Polynomial Evaluation Time");
+	profiler.Stop();
+	results->AddRunTime(profiler.Log(), "Repeat Region Time Total");
 	if (verbose)
 		tools::SaveDataFile(outputData, outputSampleSize, 1, settings::GetResampleOuputFile_SignalOut(), false);
 
@@ -123,11 +145,11 @@ int Test_Resample(ResultsStruct* results)
 	size_t outputRate = settings::GetTestSampleOutputRate();
 	size_t order = settings::GetTestPolynomialOrder();
 	cl_float* coeffs = NULL;
-	const bool verbose = true; // force printing everything
+	const bool verbose = false; // force printing everything
 
 	ProfilerStruct profiler;
 	profiler.Start();
-	cl_float* resampledData = Resample(inputFile, inputRate, outputRate, order, &coeffs, verbose);
+	cl_float* resampledData = Resample(inputFile, inputRate, outputRate, order, &coeffs, verbose, results);
 	profiler.Stop();
 	results->HasWindowsRunTime = true;
 	results->WindowsRunTime = profiler.Log();

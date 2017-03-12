@@ -94,8 +94,8 @@ cl_float* ResampleOcl(cl_float* signalInput, cl_float* QTranspose, cl_float* R, 
 // Run Resample Function 
 int Run_ResampleOcl(ResultsStruct* results)
 {
-	ProfilerStruct fullProfiler;
-	fullProfiler.Start();
+	ProfilerStruct profiler;
+	profiler.Start();
 	tools::FreeMemoryFinalizer freeDeferred;
 
 	// Get Settings
@@ -107,7 +107,9 @@ int Run_ResampleOcl(ResultsStruct* results)
 	// Read Data File
 	size_t signalRows = 0;
 	size_t signalCols = 0;
+	(void)profiler.Lap();
 	cl_float* signalInput = tools::LoadDataFile(signalDataFile, &signalRows, &signalCols);
+	results->AddRunTime(profiler.Lap(), "LoadDataFile Signal Data Time");
 	if (!signalInput || !signalRows || !signalCols)
 	{
 		std::cout << "ERROR: Failed to load signal data from file: " << signalDataFile << std::endl;
@@ -123,7 +125,9 @@ int Run_ResampleOcl(ResultsStruct* results)
 	cl_float* OutputTimes = NULL;
 	cl_float* InputTimes = NULL;
 	size_t outputSampleCount = 0;
+	(void)profiler.Lap();
 	bool retVal = Resample_ToQR(sampleInputRate, sampleOutputRate, sampleOrder, sampleCount, &QTranspose, &R, &OutputTimes, &outputSampleCount, &InputTimes);
+	results->AddRunTime(profiler.Lap(), "Resample_ToQR Time");
 	if (!retVal)
 	{
 		std::cout << "ERROR: Failed to build QTranspose and R Matrixes" << std::endl;
@@ -136,11 +140,14 @@ int Run_ResampleOcl(ResultsStruct* results)
 	//////////////////////////
 	// BEGIN REPEATING PORTION
 	// Wrap the repeatable portion in the profiler
-	ProfilerStruct profiler;
-	profiler.Start();
+	(void)profiler.Lap();
 	cl_float* signalOut = ResampleOcl(signalInput, QTranspose, R, sampleCount, outputSampleCount, sampleOrder, OutputTimes, results);
+	results->AddRunTime(profiler.Lap(), "Total Repeating Algorithm Time");
+
+	// Full Time
 	profiler.Stop();
-	results->AddRunTime(profiler.Log(), "Total Repeating Algorithm Time");
+	results->HasWindowsRunTime = true;
+	results->WindowsRunTime = profiler.Log();
 
 	/////////////////////////
 	// Write Out Data
@@ -161,9 +168,6 @@ int Run_ResampleOcl(ResultsStruct* results)
 	tools::SaveDataFile(OutputTimes, outputSampleCount, 1, verboseFile, true);
 #endif
 
-	fullProfiler.Stop();
-	results->HasWindowsRunTime = true;
-	results->WindowsRunTime = fullProfiler.Log();
 	return 0;
 }
 
