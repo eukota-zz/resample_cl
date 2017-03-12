@@ -83,7 +83,16 @@ void PrintResults(const ResultsList& results)
 		printf("Average Windows Profiler Runtime: %f ms.\n", WindowsAvg);
 	if (results.front()->HasOpenCLRunTime)
 		printf("Average OpenCL Profiler Runtime : %f ms.\n", OpenCLAvg);
-
+	if (results.front()->HasRunTimeVect())
+	{
+		size_t idx = 0;
+		for (std::vector<double>::iterator i = results.front()->RunTimeVect.begin(), e = results.front()->RunTimeVect.end(); i != e; ++i, ++idx)
+		{
+			printf("Run Times:\n");
+			printf("%s: %f ms \n", results.front()->RunVectDesc[idx].c_str(), *i);
+		}
+	}
+	 
 	if (PRINT_TO_FILE)
 		PrintToFile(results);
 }

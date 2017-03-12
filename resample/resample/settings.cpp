@@ -161,12 +161,12 @@ namespace settings
 	{
 		(void)CreatePrefFile(OCTAVE_PREF_FILE);
 		const std::string prefFilePath = PrefFilePath(OCTAVE_PREF_FILE);
-		WritePrivateProfileStringA(OCTAVE_APP, PREF_SIGNAL_DATA, "..\\data\\test_resample_input_signal.csv", prefFilePath.c_str());
-		WritePrivateProfileStringA(OCTAVE_APP, PREF_COEFFS_DATA, "..\\data\\test_resample_coeffs.csv", prefFilePath.c_str());
-		WritePrivateProfileStringA(OCTAVE_APP, PREF_OUTPUT_DATA, "..\\data\\test_resample_output_signal.csv", prefFilePath.c_str());
-		WritePrivateProfileStringA(OCTAVE_APP, PREF_SAMPLE_INPUT_RATE, std::to_string(100).c_str(), prefFilePath.c_str());
-		WritePrivateProfileStringA(OCTAVE_APP, PREF_SAMPLE_OUTPUT_RATE, std::to_string(50).c_str(), prefFilePath.c_str());
-		WritePrivateProfileStringA(OCTAVE_APP, PREF_POLYNOMIAL_ORDER, std::to_string(7).c_str(), prefFilePath.c_str());
+		WritePrivateProfileStringA(OCTAVE_APP, PREF_SIGNAL_DATA, "..\\data\\test_resample_input_signal_FULL.csv", prefFilePath.c_str());
+		WritePrivateProfileStringA(OCTAVE_APP, PREF_COEFFS_DATA, "", prefFilePath.c_str());
+		WritePrivateProfileStringA(OCTAVE_APP, PREF_OUTPUT_DATA, "", prefFilePath.c_str());
+		WritePrivateProfileStringA(OCTAVE_APP, PREF_SAMPLE_INPUT_RATE, std::to_string(256).c_str(), prefFilePath.c_str());
+		WritePrivateProfileStringA(OCTAVE_APP, PREF_SAMPLE_OUTPUT_RATE, std::to_string(128).c_str(), prefFilePath.c_str());
+		WritePrivateProfileStringA(OCTAVE_APP, PREF_POLYNOMIAL_ORDER, std::to_string(6).c_str(), prefFilePath.c_str());
 	}
 	
 	// Reads from Octave.ini

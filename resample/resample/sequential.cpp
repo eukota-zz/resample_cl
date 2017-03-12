@@ -134,9 +134,13 @@ int Test_Resample(ResultsStruct* results)
 
 	bool failed = false;
 	// Load And Verify Expected Coefficients Results
-	std::cout << "Verify Coefficients Match: ";
+	
+	const std::string coeffsFile = settings::GetCoeffsTestDataPath();
+	if (coeffsFile.empty())
+		std::cout << "Coefficient verification file not provided. Skipping Coefficient verification." << std::endl;
+	else
 	{
-		const std::string coeffsFile = settings::GetCoeffsTestDataPath();
+		std::cout << "Verify Coefficients Match: ";
 		size_t coeffsRows = 0;
 		size_t coeffsCols = 0;
 		cl_float* expectedCoeffs = tools::LoadDataFile(coeffsFile, &coeffsRows, &coeffsCols);
@@ -166,9 +170,12 @@ int Test_Resample(ResultsStruct* results)
 	}
 
 	// Load And Verify Signal Output Results
-	std::cout << "Verify Resample Results Match: ";
+	const std::string outputFile = settings::GetOutputTestDataPath();
+	if (coeffsFile.empty())
+		std::cout << "Signal Output verification file not provided. Skipping signal output verification." << std::endl;
+	else
 	{
-		const std::string outputFile = settings::GetOutputTestDataPath();
+		std::cout << "Verify Resample Results Match: ";
 		size_t outputRows = 0;
 		size_t outputCols = 0;
 		cl_float* expectedOutput = tools::LoadDataFile(outputFile, &outputRows, &outputCols);

@@ -8,12 +8,14 @@
 
 struct ProfilerStruct
 {
-	ProfilerStruct() { Frequency.QuadPart = 1; CountStart.QuadPart = 0; CountStop.QuadPart = 0; }
-	LARGE_INTEGER Frequency;
+	ProfilerStruct() { CountStart.QuadPart = 0; CountLap.QuadPart = 0; CountStop.QuadPart = 0; }
 	LARGE_INTEGER CountStart;
+	LARGE_INTEGER CountLap;
 	LARGE_INTEGER CountStop;
 	void Start();
+	float Lap();
 	void Stop();
-	void AcquireFrequency();
+	LARGE_INTEGER AcquireFrequency();
 	float Log(bool writeToLog = false);
+	float GetTimeDiff(LARGE_INTEGER start, LARGE_INTEGER stop);
 };

@@ -14,7 +14,7 @@ public:
 extern ResampleGroup* ResampleGroupObject;
 
 // Full Reseample Functions
-cl_float* ResampleOcl(cl_float* signalInput, cl_float* QTranspose, cl_float* R, size_t sampleInputCount, size_t sampleOutputCount, size_t sampleOrder, cl_float* outputTimes);
+cl_float* ResampleOcl(cl_float* signalInput, cl_float* QTranspose, cl_float* R, size_t sampleInputCount, size_t sampleOutputCount, size_t sampleOrder, cl_float* outputTimes, ResultsStruct* results);
 int Run_ResampleOcl(ResultsStruct* results);
 
 

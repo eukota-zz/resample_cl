@@ -11,6 +11,16 @@ struct ResultsStruct
 	bool HasOpenCLRunTime;
 	std::string Annotation;
 	size_t WorkGroupSize[3];
+
+	bool HasRunTimeVect() {	return !RunTimeVect.empty(); }
+	
+	void AddRunTime(double runTime, const std::string& desc)
+	{
+		RunTimeVect.push_back(runTime);
+		RunVectDesc.push_back(desc);
+	}
+	std::vector<double> RunTimeVect;
+	std::vector<std::string> RunVectDesc;
 };
 
 // For use when sorting results lists
