@@ -94,6 +94,8 @@ cl_float* ResampleOcl(cl_float* signalInput, cl_float* QTranspose, cl_float* R, 
 // Run Resample Function 
 int Run_ResampleOcl(ResultsStruct* results)
 {
+	ProfilerStruct fullProfiler;
+	fullProfiler.Start();
 	tools::FreeMemoryFinalizer freeDeferred;
 
 	// Get Settings
@@ -138,8 +140,7 @@ int Run_ResampleOcl(ResultsStruct* results)
 	profiler.Start();
 	cl_float* signalOut = ResampleOcl(signalInput, QTranspose, R, sampleCount, outputSampleCount, sampleOrder, OutputTimes, results);
 	profiler.Stop();
-	results->HasWindowsRunTime = true;
-	results->WindowsRunTime = profiler.Log();
+	results->AddRunTime(profiler.Log(), "Total Repeating Algorithm Time");
 
 	/////////////////////////
 	// Write Out Data
@@ -160,7 +161,9 @@ int Run_ResampleOcl(ResultsStruct* results)
 	tools::SaveDataFile(OutputTimes, outputSampleCount, 1, verboseFile, true);
 #endif
 
-
+	fullProfiler.Stop();
+	results->HasWindowsRunTime = true;
+	results->WindowsRunTime = fullProfiler.Log();
 	return 0;
 }
 

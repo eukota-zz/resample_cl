@@ -131,8 +131,6 @@ int Test_PolyEvalOcl(ResultsStruct* results)
 
 	results->WindowsRunTime = runTime;
 	results->HasWindowsRunTime = true;
-	results->OpenCLRunTime = 0;
-	results->HasOpenCLRunTime = false;
 	return 0;
 }
 
@@ -268,7 +266,5 @@ int Test_MatrixMultiplierOcl(ResultsStruct* results)
 
 	results->WindowsRunTime = runTime;
 	results->HasWindowsRunTime = true;
-	results->OpenCLRunTime = 0;
-	results->HasOpenCLRunTime = false;
 	return 0;
 }

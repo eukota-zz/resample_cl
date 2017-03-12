@@ -6,9 +6,7 @@ struct ResultsStruct
 {
 	ResultsStruct();
 	double WindowsRunTime;
-	double OpenCLRunTime;
 	bool HasWindowsRunTime;
-	bool HasOpenCLRunTime;
 	std::string Annotation;
 	size_t WorkGroupSize[3];
 
@@ -22,9 +20,6 @@ struct ResultsStruct
 	std::vector<double> RunTimeVect;
 	std::vector<std::string> RunVectDesc;
 };
-
-// For use when sorting results lists
-bool resultTimeOCL(ResultsStruct* A, ResultsStruct* B);
 
 class ResultsList : public std::vector<ResultsStruct*>
 {

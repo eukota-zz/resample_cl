@@ -10,19 +10,13 @@
 
 ResultsStruct::ResultsStruct()
 	: WindowsRunTime(0.0)
-	, OpenCLRunTime(0.0)
 	, HasWindowsRunTime(false)
-	, HasOpenCLRunTime(false)
 {
 	WorkGroupSize[0] = 0;
 	WorkGroupSize[1] = 0;
 	WorkGroupSize[2] = 0;
 }
 
-bool resultTimeOCL(ResultsStruct* A, ResultsStruct* B)
-{
-	return A->OpenCLRunTime < B->OpenCLRunTime;
-}
 // Ensure memory is cleared
 ResultsList::~ResultsList()
 {
@@ -52,8 +46,7 @@ void PrintToFile(const ResultsList& results)
 	for (ResultsList::const_iterator i = results.begin(), e = results.end(); i != e; ++i, ++num)
 	{
 		totalWindowsTimes += (*i)->WindowsRunTime;
-		totalOpenCLTimes += (*i)->OpenCLRunTime;
-		outfile << num + 1 << "," << (*i)->WorkGroupSize << "," << (*i)->WindowsRunTime << "," << (*i)->OpenCLRunTime << std::endl;
+		outfile << num + 1 << "," << (*i)->WorkGroupSize << "," << (*i)->WindowsRunTime << std::endl;
 	}
 	const double WindowsAvg = totalWindowsTimes / (double)num;
 	const double OpenCLAvg = totalOpenCLTimes / (double)num;
@@ -67,30 +60,26 @@ void PrintResults(const ResultsList& results)
 		return;
 
 	double totalWindowsTimes = 0.0;
-	double totalOpenCLTimes = 0.0;
 	int num = 0;
-	for (ResultsList::const_iterator i = results.begin(), e = results.end(); i != e; ++i, ++num)
+	if (results.size() > 1)
 	{
-		totalWindowsTimes += (*i)->WindowsRunTime;
-		totalOpenCLTimes += (*i)->OpenCLRunTime;
-		printf("Run: %d: Windows Profiler Runtime: %f ms. OpenCL Profiler Runtime: %f ms.\n", num + 1, (*i)->WindowsRunTime, (*i)->OpenCLRunTime);
+		for (ResultsList::const_iterator i = results.begin(), e = results.end(); i != e; ++i, ++num)
+		{
+			totalWindowsTimes += (*i)->WindowsRunTime;
+			printf("Run: %d: Windows Profiler Runtime: %f ms.\n", num + 1, (*i)->WindowsRunTime);
+		}
+		printf("---------------------------\n");
+		const double WindowsAvg = totalWindowsTimes / (double)num;
+		if (results.front()->HasWindowsRunTime)
+			printf("Average Windows Profiler Runtime: %f ms.\n", WindowsAvg);
 	}
 
-	const double WindowsAvg = totalWindowsTimes / (double)num;
-	const double OpenCLAvg = totalOpenCLTimes / (double)num;
-	printf("---------------------------\n");
-	if (results.front()->HasWindowsRunTime)
-		printf("Average Windows Profiler Runtime: %f ms.\n", WindowsAvg);
-	if (results.front()->HasOpenCLRunTime)
-		printf("Average OpenCL Profiler Runtime : %f ms.\n", OpenCLAvg);
 	if (results.front()->HasRunTimeVect())
 	{
 		size_t idx = 0;
+		printf("Run Times:\n");
 		for (std::vector<double>::iterator i = results.front()->RunTimeVect.begin(), e = results.front()->RunTimeVect.end(); i != e; ++i, ++idx)
-		{
-			printf("Run Times:\n");
 			printf("%s: %f ms \n", results.front()->RunVectDesc[idx].c_str(), *i);
-		}
 	}
 	 
 	if (PRINT_TO_FILE)
